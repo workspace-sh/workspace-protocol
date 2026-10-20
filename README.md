@@ -262,8 +262,9 @@ The design lives in `docs/`:
   / LAN / WAN peer-discovery hierarchy
 - **[`lighthouse.md`](./docs/lighthouse.md)** — the Lighthouse concept:
   trusted always-on nodes a workspace opts into for availability
-- **[`document-actions.md`](./docs/document-actions.md)** — exploration:
-  small sandboxed functions inside documents that show or keep values,
+- **[`actions.md`](./docs/actions.md)** — exploration: small sandboxed
+  functions in a document, across files or for a workspace, that show or
+  keep values,
   run on devices that grant them, with syntax and prior art
 - **[`identity-recovery.md`](./docs/identity-recovery.md)** — device
   linking, recovery (escrow key), and key rotation as three concrete
