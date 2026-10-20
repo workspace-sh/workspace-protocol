@@ -390,3 +390,7 @@ that this device holds that workspace.
 - **Throughput once connected.** A different question again.
 
 Refs: workspace#313, workspace#309, workspace#312
+
+---
+
+Up: [Network](./README.md) · [All docs](../README.md)

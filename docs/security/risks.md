@@ -3,8 +3,8 @@
 Honest assessment of where this design could fail, the positions we're
 taking, and the residual risk after mitigations. This is not boilerplate
 — each risk below has been considered specifically against the design
-in [`permissions-model.md`](./permissions-model.md),
-[`workspace-format.md`](./workspace-format.md), and
+in [`permissions-model.md`](../permissions/permissions-model.md),
+[`workspace-format.md`](../format/workspace-format.md), and
 [`threat-model.md`](./threat-model.md).
 
 The risks fall into two groups: **architectural** (will the system
@@ -82,12 +82,12 @@ but fails for the most restrictive ones (corporate guest wifi,
 carrier-grade NAT mobile data, etc.). Mitigation: clear UX showing
 relay state and easy override. Orgs that want a more capable always-
 on peer — one that holds workspace state, not just relays packets —
-run a Lighthouse (see [`lighthouse.md`](./lighthouse.md)). Relays
+run a Lighthouse (see [`lighthouse.md`](../lighthouse/README.md)). Relays
 and Lighthouses solve different problems and coexist. For peers on
 the same LAN, neither is the right tool: a future LAN-discovery
 layer (mDNS-based, ~200 lines built on Holepunch's `multicast-dns`)
 removes the public-DHT dependency entirely for co-located peers. See
-[`discovery-layers.md`](./discovery-layers.md).
+[`discovery-layers.md`](../network/discovery-layers.md).
 
 A motivated adversary running a malicious relay can observe metadata
 patterns (which DIDs talk to which, when, how much). The encrypted
@@ -118,7 +118,7 @@ from every SaaS competitor.
 Mobile is **online-mostly**, not always-on. Sync runs while the app
 is in foreground or recently-backgrounded. Desktop is the always-on
 peer that holds workspace state durably. Mobile-only users point
-their workspace at a Lighthouse (see [`lighthouse.md`](./lighthouse.md))
+their workspace at a Lighthouse (see [`lighthouse.md`](../lighthouse/README.md))
 — their own, their org's, or a hosted one — as their stand-in for
 "always-on peer."
 
@@ -195,7 +195,7 @@ API stabilises differently.
 ### Position
 
 **Superseded, Sep 2026:** the SDK runs UCAN 1.0 through iso-ucan
-(workspace-sh/workspace#462; [ADR 0001](./adr/0001-ucan-library.md) says
+(workspace-sh/workspace#462; [ADR 0001](../adr/0001-ucan-library.md) says
 why), and revocation is our own root-signed block rather than a library's.
 The position below is the original one, kept for the record.
 
@@ -762,7 +762,7 @@ variable.
 Captured here to avoid losing the thread:
 
 - **LAN discovery (mDNS).** Layer 2 of the
-  [discovery-layers](./discovery-layers.md) story. Implementation
+  [discovery-layers](../network/discovery-layers.md) story. Implementation
   pending; prior art exists in Holepunch's `multicast-dns` module
   (mafintosh-authored) and the dat-ecosystem's `dns-discovery`.
   ~200 lines of new code. Removes the public-DHT dependency for
@@ -783,13 +783,17 @@ Captured here to avoid losing the thread:
 
 - [`threat-model.md`](./threat-model.md) — what Workspace protects and
   what it doesn't (the contract that bounds the technical risks)
-- [`permissions-model.md`](./permissions-model.md) — the protocol
+- [`permissions-model.md`](../permissions/permissions-model.md) — the protocol
   these risks attach to
-- [`workspace-format.md`](./workspace-format.md) — the container
+- [`workspace-format.md`](../format/workspace-format.md) — the container
   format
-- [`lighthouse.md`](./lighthouse.md) — the always-on-node concept
+- [`lighthouse.md`](../lighthouse/README.md) — the always-on-node concept
   that closes the mobile and casual-user availability gaps
 - [Issue #19](https://github.com/workspace-sh/workspace-p2p-spike/issues/19)
   — UCAN library choice ADR
 - [Issue #17](https://github.com/workspace-sh/workspace-p2p-spike/issues/17)
   — identity recovery / device linking / key rotation
+
+---
+
+Up: [Security](./README.md) · [All docs](../README.md)

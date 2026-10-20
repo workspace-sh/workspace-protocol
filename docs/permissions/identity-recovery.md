@@ -193,8 +193,12 @@ device from past content.
 
 - [`permissions-model.md`](./permissions-model.md) — the two carriers,
   revocation levers, the supersession block lives on the key delivery log
-- [`threat-model.md`](./threat-model.md) — what revocation does and
+- [`threat-model.md`](../security/threat-model.md) — what revocation does and
   doesn't guarantee (the forward-only contract)
-- [`lighthouse.md`](./lighthouse.md) — optional escrow / always-on peer
-- [`adr/0001-ucan-library.md`](./adr/0001-ucan-library.md) — the UCAN
+- [`lighthouse.md`](../lighthouse/README.md) — optional escrow / always-on peer
+- [`adr/0001-ucan-library.md`](../adr/0001-ucan-library.md) — the UCAN
   layer these flows delegate over
+
+---
+
+Up: [Permissions and identity](./README.md) · [All docs](../README.md)

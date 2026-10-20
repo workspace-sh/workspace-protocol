@@ -13,8 +13,8 @@
 // anyone else's keys.
 //
 // This demo runs everything in one process over the runtime's direct pipe
-// (deterministic, no network). See docs/permissions-model.md ("The two
-// carriers") and docs/discovery-layers.md for the framing.
+// (deterministic, no network). See docs/permissions/permissions-model.md ("The two
+// carriers") and docs/network/discovery-layers.md for the framing.
 
 import { createRequire } from 'node:module';
 

@@ -20,7 +20,7 @@
 //      simulator) and --imports, for the builtins node_modules reaches for.
 //      Pass the resulting bytes as `bundle`; the caller owns asset loading,
 //      which differs between Expo, bare React Native, and a test harness.
-//   3. `storage` is REQUIRED, as on macOS — see docs/workspace-format.md
+//   3. `storage` is REQUIRED, as on macOS — see docs/format/workspace-format.md
 //      invariant 4: corestore storage must never default into a folder that
 //      might be cloud-synced.
 

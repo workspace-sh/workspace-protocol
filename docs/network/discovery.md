@@ -17,7 +17,7 @@ To be clear about scope: discovery is about *finding* a workspace,
 not *getting in*. Once an app has found the workspace, whether you
 can read what's inside is decided by the permission model, which
 operates entirely separately. See
-[`permissions-model.md`](./permissions-model.md) for that side of
+[`permissions-model.md`](../permissions/permissions-model.md) for that side of
 the story.
 
 **Status:** design — implementation pending. Tracked in
@@ -179,7 +179,7 @@ App caches successful resolutions for the TTL of the underlying record
 - **Not authentication.** The URI a discovery record produces is the
   workspace's canonical identifier. Joining still requires the usual
   invite/envelope flow; discovery just gets you to the bootstrap step.
-  See [`permissions-model.md`](./permissions-model.md).
+  See [`permissions-model.md`](../permissions/permissions-model.md).
 - **Not part of the workspace's identity.** A workspace's identity is
   its root pubkey, fixed at creation. The DNS record is a *pointer* to
   that identity. Changing the DNS record changes only how the workspace
@@ -263,17 +263,21 @@ The implementation work is small:
 
 ## Cross-references
 
-- [`uri-scheme.md`](./uri-scheme.md) — the `workspace://` URI scheme
+- [`uri-scheme.md`](../format/uri-scheme.md) — the `workspace://` URI scheme
   that discovery resolves to
-- [`workspace-format.md`](./workspace-format.md) — the on-disk
+- [`workspace-format.md`](../format/workspace-format.md) — the on-disk
   workspace format that holds the workspace this URI identifies
-- [`permissions-model.md`](./permissions-model.md) — the access-
+- [`permissions-model.md`](../permissions/permissions-model.md) — the access-
   control layer that takes over once the user has the URI
-- [`threat-model.md`](./threat-model.md) — what Workspace's security
+- [`threat-model.md`](../security/threat-model.md) — what Workspace's security
   guarantees do and don't cover, including the "fraudulent identity
   claim" risk relevant to DNS spoofing
-- [`lighthouse.md`](./lighthouse.md) — what an org's recommended
+- [`lighthouse.md`](../lighthouse/README.md) — what an org's recommended
   cold-start peer actually is once discovery resolves
 - [`discovery-layers.md`](./discovery-layers.md) — *peer*-to-peer
   discovery (local / LAN / WAN), distinct from the *domain*-to-URI
   resolution this doc covers
+
+---
+
+Up: [Network](./README.md) · [All docs](../README.md)

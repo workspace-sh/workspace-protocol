@@ -412,7 +412,7 @@ Corestore multiplexes every core it holds over one stream, so
 sharing ten workspaces with someone costs one connection and not
 ten.
 
-See [many-workspaces.md](./many-workspaces.md) for the cost model
+See [many-workspaces.md](../sync/many-workspaces.md) for the cost model
 and the three rules an implementation has to follow.
 
 ### A note on the network
@@ -423,7 +423,7 @@ at **40 seconds** on a cellular connection, against 73 ms for
 opening the corestore. A local-first format whose local operations
 wait on a network round trip is not local-first.
 
-See [network-conditions.md](./network-conditions.md) for the
+See [network-conditions.md](../network/network-conditions.md) for the
 measurements, the suspected-timeout tell, and the rules that follow.
 
 ---
@@ -529,7 +529,7 @@ logs or another topic. Defeats tampering of the manifest and replay
 of stale workspaces. Does **not** defeat fraudulent identity claims —
 verifying that a given `did:key:z…` belongs to a legitimate
 authority still requires an out-of-band channel. See
-[`threat-model.md`](./threat-model.md).
+[`threat-model.md`](../security/threat-model.md).
 
 The signed bytes are UTF-8 JSON with no whitespace and every object's
 keys in alphabetical order; absent optional fields are omitted.
@@ -610,7 +610,7 @@ do not.
 **Honest framing of the audit option:** it is a cooperating-client
 hint, not cryptographic enforcement. A modified client can refuse to
 log or log false events. See
-[`threat-model.md`](./threat-model.md) ("Action-level audit, when
+[`threat-model.md`](../security/threat-model.md) ("Action-level audit, when
 needed") for the contract details and when this evidence is
 sufficient.
 
@@ -626,7 +626,7 @@ stays offline forever never receives the policy updates. The
 encrypted store remains sealed against unauthorised viewers
 regardless (cryptographic enforcement carries that load). The policy
 file is what makes the 95% of cooperating clients clean up cleanly
-on revocation. See [`threat-model.md`](./threat-model.md) for the
+on revocation. See [`threat-model.md`](../security/threat-model.md) for the
 full contract.
 
 Replicated state property: the policy file is part of the
@@ -657,7 +657,7 @@ the symmetric keys they need, the resource URI.
 
 Bootstrap envelopes are the **offline first-contact** carrier. For
 ongoing key delivery to peers already in the swarm, see "The two
-carriers" in [`permissions-model.md`](./permissions-model.md).
+carriers" in [`permissions-model.md`](../permissions/permissions-model.md).
 
 ### `keys/`
 
@@ -758,7 +758,7 @@ verification and is ignored, then re-fetched. This is the same
 recency model as copying any file while its author is still typing.
 
 Rationale, options considered, and the history that led here:
-[`adr/0003-store-dual-form.md`](./adr/0003-store-dual-form.md).
+[`adr/0003-store-dual-form.md`](../adr/0003-store-dual-form.md).
 
 ---
 
@@ -777,7 +777,7 @@ A workspace can contain a mix of:
 A peer's effective access at any moment is the union of every key
 they hold, which is the union of every UCAN delegation chain that
 terminates at their DID. The audit trail is the chain itself
-([`threat-model.md`](./threat-model.md)).
+([`threat-model.md`](../security/threat-model.md)).
 
 ### File-format-specific semantics
 
@@ -964,7 +964,7 @@ exist when the user wants them.
   The workspace just contains them and adds an enforcement layer.
 - **Not the protocol.** The cryptographic mechanics (UCAN, key
   wrapping, Hypercore, Hyperswarm, root attestation) live in
-  [`permissions-model.md`](./permissions-model.md). This document
+  [`permissions-model.md`](../permissions/permissions-model.md). This document
   describes the on-disk shape and the user-facing surface.
 - **Not a lock-in.** The working tree is the user's data, always
   readable without a Workspace app. The container adds value when
@@ -1031,7 +1031,7 @@ answered as implementation forces choices.
 This format is the **container** for everything the permissions model
 delivers. The model defines the cryptographic protocol; the format
 defines where the bytes sit on disk. Both serve the contract spelled
-out in [`threat-model.md`](./threat-model.md).
+out in [`threat-model.md`](../security/threat-model.md).
 
 Implementation work that materially affects this format:
 
@@ -1056,17 +1056,21 @@ Implementation work that materially affects this format:
 - [`uri-scheme.md`](./uri-scheme.md) — the `workspace://` URI scheme
   in full (path namespaces, sub-resource addressing, locator alphabets,
   parsing rules)
-- [`lighthouse.md`](./lighthouse.md) — trusted always-on node
+- [`lighthouse.md`](../lighthouse/README.md) — trusted always-on node
   concept; replicates this format from a known reachable address
-- [`discovery.md`](./discovery.md) — DNS TXT and `.well-known/workspace`
+- [`discovery.md`](../network/discovery.md) — DNS TXT and `.well-known/workspace`
   discovery for orgs with a domain
-- [`threat-model.md`](./threat-model.md) — the contract this format
+- [`threat-model.md`](../security/threat-model.md) — the contract this format
   serves
-- [`permissions-model.md`](./permissions-model.md) — the
+- [`permissions-model.md`](../permissions/permissions-model.md) — the
   cryptographic protocol
-- [`risks.md`](./risks.md) — where this could fail and what we're
+- [`risks.md`](../security/risks.md) — where this could fail and what we're
   doing about it
-- [`ucan-prior-research.md`](./ucan-prior-research.md) — UCAN
+- [`ucan-prior-research.md`](../permissions/ucan-prior-research.md) — UCAN
   library notes
 - [`table-file-format/docs/PERMISSIONS.md`](https://github.com/workspace-sh/table-file-format/blob/develop/docs/PERMISSIONS.md)
   (PR #26) — `.table`'s consumer-side permission view
+
+---
+
+Up: [Format](./README.md) · [All docs](../README.md)

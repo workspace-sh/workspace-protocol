@@ -148,7 +148,7 @@ Implemented in `@workspace.sh/portable-bootstrap`. Used when:
 - First-contact delivery, where neither sender nor recipient may be
   online simultaneously
 
-See [`workspace-format.md`](./workspace-format.md) for the on-disk
+See [`workspace-format.md`](../format/workspace-format.md) for the on-disk
 shape.
 
 #### Carrier 2 — Live key delivery Hypercore log (steady-state churn)
@@ -510,7 +510,7 @@ address is never shared with the wider org.
   defined above; needs the live key delivery log (#9) and
   app-side honour-the-policy logic
 - **Workspace policy file** — schema defined in
-  [`workspace-format.md`](./workspace-format.md); honoured by app at
+  [`workspace-format.md`](../format/workspace-format.md); honoured by app at
   revocation, key rotation, workspace deletion events
 
 ### Upgrade path (out of scope for v1)
@@ -532,22 +532,22 @@ address is never shared with the wider org.
 
 ## Cross-references
 
-- [`threat-model.md`](./threat-model.md) — the contract this protocol
+- [`threat-model.md`](../security/threat-model.md) — the contract this protocol
   serves (what Workspace protects, what it doesn't, forward-only
   revocation, audit trail = delegation chain, cooperative-client
   policy)
-- [`workspace-format.md`](./workspace-format.md) — the `.workspace`
+- [`workspace-format.md`](../format/workspace-format.md) — the `.workspace`
   container format that distributes the artefacts this protocol
   produces (folder-as-unit, `workspace://` URI, hidden schema
   entries, policy file)
-- [`risks.md`](./risks.md) — where this could fail and what we're
+- [`risks.md`](../security/risks.md) — where this could fail and what we're
   doing about it
-- [`lighthouse.md`](./lighthouse.md) — the always-on-node concept;
+- [`lighthouse.md`](../lighthouse/README.md) — the always-on-node concept;
   participates in the same UCAN + replication layer as any other peer
-- [`discovery-layers.md`](./discovery-layers.md) — how peers find
+- [`discovery-layers.md`](../network/discovery-layers.md) — how peers find
   each other (local / LAN / WAN) before this protocol takes over
-- [`FINDINGS.md`](../FINDINGS.md) — spike verdict + extraction checklist
-- [`docs/ucan-prior-research.md`](./ucan-prior-research.md) — UCAN
+- [`FINDINGS.md`](../../FINDINGS.md) — spike verdict + extraction checklist
+- [`docs/permissions/ucan-prior-research.md`](./ucan-prior-research.md) — UCAN
   library notes from the earlier spike (library comparison; ucanto
   specifics predate the move to iso-ucan)
 - [`table-file-format/docs/PERMISSIONS.md`](https://github.com/workspace-sh/table-file-format/blob/develop/docs/PERMISSIONS.md) —
@@ -556,3 +556,7 @@ address is never shared with the wider org.
   UCAN + Hypercore identity bridge (now expanded by this doc)
 - [Issue #6](https://github.com/workspace-sh/workspace-p2p-spike/issues/6) —
   mobile path
+
+---
+
+Up: [Permissions and identity](./README.md) · [All docs](../README.md)

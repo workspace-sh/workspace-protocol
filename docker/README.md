@@ -136,6 +136,6 @@ explicitly verifying the public-DHT path.
 
 - [`apps/node/README.md`](../apps/node/README.md) — the demo scripts
   themselves
-- [`docs/discovery-layers.md`](../docs/discovery-layers.md) — the
+- [`docs/network/discovery-layers.md`](../docs/network/discovery-layers.md) — the
   architectural framing for local-first / LAN / WAN; explains why
   private DHT is a first-class story

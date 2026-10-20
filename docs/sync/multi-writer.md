@@ -1,7 +1,7 @@
 # Two people writing into one workspace
 
 **Status:** plan, 17 Sep 2026. The merge behaviour was decided in
-[ADR 0002](./adr/0002-autobase-merge-strategy.md) and still stands; the
+[ADR 0002](../adr/0002-autobase-merge-strategy.md) and still stands; the
 foundation under it is decided here. Nothing is implemented yet: today a
 workspace has one writer, the device that created it.
 
@@ -65,7 +65,7 @@ document now says. Whatever is chosen below:
 
 ## The merge is already decided
 
-[ADR 0002](./adr/0002-autobase-merge-strategy.md) settled it, and it was
+[ADR 0002](../adr/0002-autobase-merge-strategy.md) settled it, and it was
 reaffirmed on 16 Sep 2026. **Last-writer-wins per entity, where the entity is
 what each format calls a thing:**
 
@@ -242,3 +242,7 @@ What isn't:
 - **Key rotation on removal.** Removal stops a writer; it does not re-key what
   they already read. That limitation is recorded in `permissions-model.md` and
   is not made worse by anything here.
+
+---
+
+Up: [Sync](./README.md) · [All docs](../README.md)

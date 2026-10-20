@@ -54,7 +54,7 @@ not cost a connection, a process, or a peer identity.
 - **Opening a workspace is a local operation.** Its logs open from the local
   store immediately; the topic announcement happens in the background and may
   never land on a restricted network. See
-  [network-conditions.md](./network-conditions.md) — the announce has been
+  [network-conditions.md](../network/network-conditions.md) — the announce has been
   measured at 40 seconds where opening the store takes 73 ms.
 - **A workspace closing is not a process ending.** The runtime outlives any
   individual workspace and is torn down with the app.
@@ -90,3 +90,7 @@ unrelated folder is claimed by a workspace that never held it.
   it yet.
 
 Refs: workspace#314, workspace#332, workspace#333
+
+---
+
+Up: [Sync](./README.md) · [All docs](../README.md)

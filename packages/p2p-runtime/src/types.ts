@@ -163,7 +163,7 @@ export interface CreateRuntimeOptions {
    * Each entry is `{ host, port }`. Pass at least one; the DHT will use
    * the others as backups.
    *
-   * See `docs/discovery-layers.md` for the broader local-first /
+   * See `docs/network/discovery-layers.md` for the broader local-first /
    * LAN / WAN discovery story this fits into.
    */
   bootstrap?: Array<{ host: string; port: number }>;

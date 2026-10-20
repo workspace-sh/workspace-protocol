@@ -44,7 +44,7 @@ workspace gets distributed and discovered. They carry the same
 underlying metadata; one is a file, one is a URL; both lead to the
 same place.
 
-See [`docs/workspace-format.md`](./docs/workspace-format.md) for the
+See [`docs/format/workspace-format.md`](./docs/format/workspace-format.md) for the
 full format spec.
 
 ---
@@ -248,45 +248,24 @@ workspace was distributed.
 
 ## Documentation
 
-The design lives in `docs/`:
+The design lives in [`docs/`](./docs/README.md), one folder per subject,
+each with its own index:
 
-- **[`workspace-format.md`](./docs/workspace-format.md)** — `.workspace`
-  format spec, on-disk shape, hidden schema entries, the workspace
-  policy file, portability semantics
-- **[`uri-scheme.md`](./docs/uri-scheme.md)** — the `workspace://` URI
-  scheme: shape, path namespaces, locator alphabets per file format,
-  parsing rules
-- **[`discovery.md`](./docs/discovery.md)** — DNS TXT and
-  `.well-known/workspace` mechanisms for orgs with a domain
-- **[`discovery-layers.md`](./docs/discovery-layers.md)** — local-first
-  / LAN / WAN peer-discovery hierarchy
-- **[`lighthouse.md`](./docs/lighthouse.md)** — the Lighthouse concept:
-  trusted always-on nodes a workspace opts into for availability
-- **[`actions.md`](./docs/actions.md)** — exploration: small sandboxed
-  functions in a document, across files or for a workspace, that show or
-  keep values,
-  run on devices that grant them, with syntax and prior art
-- **[`identity-recovery.md`](./docs/identity-recovery.md)** — device
-  linking, recovery (escrow key), and key rotation as three concrete
-  flows over the shipped primitives
-- **[`permissions-model.md`](./docs/permissions-model.md)** — UCAN +
-  Hypercore + Autobase protocol design, two-carrier envelope delivery,
-  revocation, scaling
-- **[`threat-model.md`](./docs/threat-model.md)** — what Workspace
-  protects, what it explicitly does not, forward-only revocation,
-  cooperative-client policy, audit-trail-as-capability-chain
-- **[`risks.md`](./docs/risks.md)** — failure modes assessed honestly,
-  positions taken, residual unknowns
-- **[`ucan-prior-research.md`](./docs/ucan-prior-research.md)** —
-  UCAN library notes (library comparison, gotchas)
-- **[`adr/`](./docs/adr/)** — architecture decision records: UCAN
-  library choice (0001), Autobase merge strategy (0002)
+- [Format](./docs/format/README.md): the `.workspace` on-disk shape and the `workspace://` URI scheme
+- [Sync](./docs/sync/README.md): blocks, merging, multi-writer, many workspaces in one runtime
+- [Network](./docs/network/README.md): discovery and network conditions
+- [Lighthouse](./docs/lighthouse/README.md): always-on peers a workspace opts into
+- [Permissions and identity](./docs/permissions/README.md): UCAN, joining, recovery, prior art
+- [Security](./docs/security/README.md): the threat model and risks
+- [Workspace actions](./docs/actions/README.md): sandboxed functions in documents and workspaces (a spike within the spec)
+- [Decisions](./docs/adr/README.md): architecture decision records
 
-Start with `workspace-format.md` if you want to understand what's
-being built. Then `threat-model.md` for the contract that bounds it,
-`uri-scheme.md` for how things are addressed, `permissions-model.md`
-for the cryptographic protocol underneath, and `risks.md` for an
-honest assessment of where this could fall down.
+Start with [`format/workspace-format.md`](./docs/format/workspace-format.md)
+for what's being built, then [`security/threat-model.md`](./docs/security/threat-model.md)
+for the contract that bounds it, [`format/uri-scheme.md`](./docs/format/uri-scheme.md)
+for addressing, [`permissions/permissions-model.md`](./docs/permissions/permissions-model.md)
+for the protocol underneath, and [`security/risks.md`](./docs/security/risks.md)
+for where it could fall down.
 
 ---
 

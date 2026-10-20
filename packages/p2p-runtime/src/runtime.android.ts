@@ -9,7 +9,7 @@
 // duplicate that starts identical is a duplicate that silently stops being so.
 //
 // The remaining Android-specific unknowns are not in this layer: Doze-mode
-// battery restrictions on background sync (docs/risks.md §2), and the
+// battery restrictions on background sync (docs/security/risks.md §2), and the
 // `bare-pack --target android` bundle differing from the iOS one.
 
 export {
