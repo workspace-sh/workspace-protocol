@@ -6,8 +6,13 @@ reachable when no peer device is awake.
 
 Lighthouses are optional. A workspace works without one — that's the
 whole point of the P2P design. But laptops close, phones sleep, and
-offices have weekends. A Lighthouse is how an organisation gets
-reliability without leaving a machine plugged in under someone's desk.
+offices have weekends. A Lighthouse keeps a workspace reachable through
+all of that.
+
+Anyone can run one: an individual, a group, a team or an organisation,
+on a machine of their own or a rented server. A hosted service (an
+eventual Workspace offering among them) runs the same spec; it's a
+convenience, never a requirement.
 
 **Status:** concept — design and implementation pending, post-spike.
 The Lighthouse implementation will live in a separate repo (TBD).
