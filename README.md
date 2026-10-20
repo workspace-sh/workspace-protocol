@@ -1,13 +1,14 @@
-# Workspace P2P Spike
+# Workspace Protocol
 
-Research spike for Workspace's P2P data + permissions layer. Outcome:
-a `.workspace` portable bundle format, a `workspace://` URI scheme for
-discovery, and a working implementation of the permissions layer that
-sits underneath.
+The specification, still in flight, and reference implementation of
+Workspace's peer-to-peer data and permissions layer: a `.workspace`
+portable bundle format, a `workspace://` URI scheme for discovery, and
+the permissions layer that sits underneath.
 
-This spike has moved beyond its original "evaluate Hypercore" question.
-The Hypercore answer was yes; the work since has been designing and
-implementing the layers above it.
+It began as a research spike (this repository was `workspace-p2p-spike`)
+asking whether Hypercore would do. The answer was yes; the work since
+has been designing and implementing the layers above it. Some of it is
+still exploration, and says so (the documents marked as spikes).
 
 ---
 
@@ -55,8 +56,8 @@ Three escalating ways to see this working, smallest first.
 ### 1. Verify the install (no network)
 
 ```sh
-git clone https://github.com/workspace-sh/workspace-p2p-spike.git
-cd workspace-p2p-spike
+git clone https://github.com/workspace-sh/workspace-protocol.git
+cd workspace-protocol
 npm install
 npm run typecheck
 npm run test
@@ -160,18 +161,18 @@ npm-only — Bun doesn't compose cleanly with `react-native-macos`.
 | Permissions layer — bootstrap envelopes | implemented |
 | Permissions layer — transparent log encryption (`encryptedLog`) | implemented |
 | Workspace SDK facade (`@workspace.sh/workspace`) | v1 implemented (single-writer; Autobase + doc model pending) |
-| Live key delivery log ([#9](https://github.com/workspace-sh/workspace-p2p-spike/issues/9)) | implemented (polish pending) |
-| Topic-layer authentication ([#10](https://github.com/workspace-sh/workspace-p2p-spike/issues/10)) | implemented (topic rotation pending) |
+| Live key delivery log ([#9](https://github.com/workspace-sh/workspace-protocol/issues/9)) | implemented (polish pending) |
+| Topic-layer authentication ([#10](https://github.com/workspace-sh/workspace-protocol/issues/10)) | implemented (topic rotation pending) |
 | `workspace://` URI scheme + `.workspace` format + discovery | designed (specs locked); see [`docs/`](./docs/) |
-| Autobase wrapper ([#11](https://github.com/workspace-sh/workspace-p2p-spike/issues/11)) | pending |
-| `.workspace` folder + archive shape ([#24](https://github.com/workspace-sh/workspace-p2p-spike/issues/24)) | designed; implementation pending |
-| DNS / `.well-known` discovery ([#25](https://github.com/workspace-sh/workspace-p2p-spike/issues/25)) | designed; implementation pending |
+| Autobase wrapper ([#11](https://github.com/workspace-sh/workspace-protocol/issues/11)) | pending |
+| `.workspace` folder + archive shape ([#24](https://github.com/workspace-sh/workspace-protocol/issues/24)) | designed; implementation pending |
+| DNS / `.well-known` discovery ([#25](https://github.com/workspace-sh/workspace-protocol/issues/25)) | designed; implementation pending |
 | Layered peer discovery (local / LAN / WAN) | designed; only WAN implemented |
 | Lighthouse — trusted always-on node | concept; post-spike, separate repo |
-| Mobile path ([#6](https://github.com/workspace-sh/workspace-p2p-spike/issues/6)) | separate workstream |
+| Mobile path ([#6](https://github.com/workspace-sh/workspace-protocol/issues/6)) | separate workstream |
 
-Permissions epic: [#5](https://github.com/workspace-sh/workspace-p2p-spike/issues/5).
-Active development on [`feat/permissions-layer`](https://github.com/workspace-sh/workspace-p2p-spike/tree/feat/permissions-layer)
+Permissions epic: [#5](https://github.com/workspace-sh/workspace-protocol/issues/5).
+Active development on [`feat/permissions-layer`](https://github.com/workspace-sh/workspace-protocol/tree/feat/permissions-layer)
 (PR #22). 65 tests green across three packages; typecheck clean.
 
 ---
