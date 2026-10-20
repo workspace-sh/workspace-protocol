@@ -63,7 +63,7 @@ folder stays the artefact.
 
 The normative description — layout, atomic-write rule, lifecycle,
 valid-but-stale copy semantics, per-platform working-store locations —
-lives in [`../workspace-format.md`](../workspace-format.md) under
+lives in [`../workspace-format.md`](../format/workspace-format.md) under
 `store/`. This ADR is the why; that doc is the how.
 
 ## Consequences
@@ -93,3 +93,7 @@ lives in [`../workspace-format.md`](../workspace-format.md) under
   one-file-per-block stops being tenable on real filesystems.
 - Partial/sparse workspace sync becomes a requirement (huge
   workspaces where hydrating everything on open is unacceptable).
+
+---
+
+Up: [Decisions](./README.md) · [All docs](../README.md)

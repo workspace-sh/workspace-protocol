@@ -58,5 +58,9 @@ For a real Workspace integration the choice is between **(a) ship faster on ucan
 - [`permissions-model.md`](./permissions-model.md) — the protocol
   these notes informed; the `canIssue` and boundary-module patterns
   ship there
-- [`threat-model.md`](./threat-model.md) — revocation cascade and
+- [`threat-model.md`](../security/threat-model.md) — revocation cascade and
   delegation-chain-as-audit-trail trace back to findings here
+
+---
+
+Up: [Permissions and identity](./README.md) · [All docs](../README.md)

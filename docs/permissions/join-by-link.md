@@ -666,9 +666,13 @@ Built through step 10 except where marked.
 
 ## Cross-references
 
-- [`uri-scheme.md`](./uri-scheme.md) — link shape, resolution flow, what leaks
-- [`workspace-format.md`](./workspace-format.md) — manifest, attestation, envelopes, distribution shapes
+- [`uri-scheme.md`](../format/uri-scheme.md) — link shape, resolution flow, what leaks
+- [`workspace-format.md`](../format/workspace-format.md) — manifest, attestation, envelopes, distribution shapes
 - [`permissions-model.md`](./permissions-model.md) — the gate, the two carriers, revocation levers
 - [`identity-recovery.md`](./identity-recovery.md) — device linking uses the same envelope
-- [`lighthouse.md`](./lighthouse.md) — an always-on member, for bearer invites
-- [`many-workspaces.md`](./many-workspaces.md) — one runtime, many workspaces
+- [`lighthouse.md`](../lighthouse/README.md) — an always-on member, for bearer invites
+- [`many-workspaces.md`](../sync/many-workspaces.md) — one runtime, many workspaces
+
+---
+
+Up: [Permissions and identity](./README.md) · [All docs](../README.md)

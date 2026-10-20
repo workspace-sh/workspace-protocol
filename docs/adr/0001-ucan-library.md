@@ -11,7 +11,7 @@ surface this ADR set up.
 - **Why now.** UCAN 1.0 (spec, delegation, invocation) is final as of July
   2026; ucanto still targets 0.9.1 with no activity on its upgrade issue
   (storacha/ucanto#345); `iso-ucan` implements the 1.0 shape and is maintained.
-  Evidence: [`../permissions-prior-art.md`](../permissions-prior-art.md) §4–5.
+  Evidence: [`../permissions-prior-art.md`](../permissions/permissions-prior-art.md) §4–5.
 - **Mapping.** A capability `{ can, with }` is `sub`: the workspace root DID,
   `cmd: /<can>`, `pol: [["==", ".resource", with]]`. The `canIssue` override
   this ADR describes is not needed: a 1.0 root delegation is self-issued by its
@@ -40,7 +40,7 @@ already shipped `@workspace.sh/ucan-boundary` on ucanto, and
 (bootstrap envelopes) build on it. This ADR captures the choice and,
 more importantly, the triggers for revisiting it.
 
-Full library comparison and gotchas: [`../ucan-prior-research.md`](../ucan-prior-research.md).
+Full library comparison and gotchas: [`../ucan-prior-research.md`](../permissions/ucan-prior-research.md).
 
 ## Decision
 
@@ -101,3 +101,7 @@ Reopen this decision on evidence, not vibes, if any of:
    use, a revocation module, and a documented ucanto→iso path.
 3. **ucanto's maintenance cadence drops** — unmaintained upstream is a
    single-dependency risk worth acting on.
+
+---
+
+Up: [Decisions](./README.md) · [All docs](../README.md)

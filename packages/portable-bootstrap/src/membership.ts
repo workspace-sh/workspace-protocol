@@ -20,8 +20,8 @@
 // decision logic here — independent of Hyperswarm — makes it fully testable
 // without a network.
 //
-// See docs/permissions-model.md ("Lever 2 — Topic-layer") and
-// docs/threat-model.md.
+// See docs/permissions/permissions-model.md ("Lever 2 — Topic-layer") and
+// docs/security/threat-model.md.
 
 import {
   fromBytes as ucanFromBytes,

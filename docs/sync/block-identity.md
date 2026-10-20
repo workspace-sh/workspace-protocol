@@ -1,7 +1,7 @@
 # What a block is, and how it keeps its identity
 
 **Status:** proposal, 17 Sep 2026. The crux of per-entity merge
-([ADR 0002](./adr/0002-autobase-merge-strategy.md), [multi-writer.md](./multi-writer.md)):
+([ADR 0002](../adr/0002-autobase-merge-strategy.md), [multi-writer.md](./multi-writer.md)):
 two people editing different paragraphs of one document both keep their work
 only if every device agrees which paragraph is which. Nothing here is built.
 
@@ -162,3 +162,7 @@ pressing, not differently so.
    the parent's?
 4. **Resurrection** (§ Deleting something someone else is editing) — is a
    deleted paragraph coming back the right behaviour?
+
+---
+
+Up: [Sync](./README.md) · [All docs](../README.md)

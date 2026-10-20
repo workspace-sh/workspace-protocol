@@ -12,9 +12,9 @@
 // envelope shape and the underlying crypto.
 //
 // See:
-//   - docs/workspace-format.md      — the on-disk format spec
-//   - docs/permissions-model.md     — the protocol
-//   - docs/threat-model.md          — what the attestation does and doesn't do
+//   - docs/format/workspace-format.md      — the on-disk format spec
+//   - docs/permissions/permissions-model.md     — the protocol
+//   - docs/security/threat-model.md          — what the attestation does and doesn't do
 
 import {
   wrap,
@@ -511,7 +511,7 @@ export { principalFromSeed };
 export type { CapabilityDescriptor, DelegationToken, Principal } from '@workspace.sh/ucan-boundary';
 
 // Filesystem pack/unpack — write a bundle to a `.workspace/` folder layout
-// per docs/workspace-format.md and read it back.
+// per docs/format/workspace-format.md and read it back.
 export { writeBundleFolder, readBundleFolder } from './folder.ts';
 
 // Live key delivery log (#9) — the second carrier. Publishes envelopes to a

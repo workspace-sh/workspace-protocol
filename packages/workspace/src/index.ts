@@ -171,7 +171,7 @@ function transportDir(folder: string, key: string): string {
  * trip, which is not what local-first means. The logs are open and readable
  * long before the announce lands; peers arrive when they arrive.
  *
- * See the spike repo's `docs/network-conditions.md` for the measurements and
+ * See the spike repo's `docs/network/network-conditions.md` for the measurements and
  * for why a resolved `joinTopic` does not currently prove the announce
  * succeeded.
  *
