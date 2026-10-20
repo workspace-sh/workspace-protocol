@@ -109,8 +109,12 @@ in.
 
 ## Naming
 
-Named by Michelangelo, after a visit to the lighthouse at Tossa del
-Mar. A lighthouse doesn't own the harbour or guide the boats — it
-just stays lit, so the boats can find their way home. Same job.
+The name comes from Michelangelo, a small boy who decided that
+lighthouses are helpers: they help people find their way home, the way
+firefighters help cats down from trees.
+
+That's the whole job. A Lighthouse doesn't own the harbour, steer the
+boats, or choose who sails. It stays lit, so whoever is out there can
+find their way home.
 
 Up: [All docs](../README.md)
