@@ -16,7 +16,7 @@ src/demos/
 └── acme-org-live.ts    ← acme-org, but over the private DHT
 ```
 
-See [`docs/discovery-layers.md`](../../docs/discovery-layers.md) for
+See [`docs/network/discovery-layers.md`](../../docs/network/discovery-layers.md) for
 why we offer both pipe-based and swarm-based versions — the discovery
 layer is the first thing that differs across local / LAN / WAN
 scenarios.
@@ -141,7 +141,7 @@ The runtime accepts a `bootstrap` option (see
 mode. The bootstrap process keeps running until Ctrl-C; the demo
 shuts down its own peers.
 
-See [`docs/discovery-layers.md`](../../docs/discovery-layers.md) for
+See [`docs/network/discovery-layers.md`](../../docs/network/discovery-layers.md) for
 the architectural framing of why this exists — it's the same
 mechanism a self-hosted org would use to run a workspace's swarm on
 their own infrastructure.
@@ -186,5 +186,5 @@ swarm transport; bare host only when Docker isn't an option.
   pending. (Transparent block encryption itself is done — `encryptedLog`
   wraps any log; the demos use it.)
 - LAN discovery (mDNS) — designed in
-  [`docs/discovery-layers.md`](../../docs/discovery-layers.md);
+  [`docs/network/discovery-layers.md`](../../docs/network/discovery-layers.md);
   not yet implemented

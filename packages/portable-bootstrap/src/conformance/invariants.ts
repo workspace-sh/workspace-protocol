@@ -1,6 +1,6 @@
 // Conformance checks for the `.workspace` format invariants.
 //
-// docs/workspace-format.md opens with six numbered invariants and says why
+// docs/format/workspace-format.md opens with six numbered invariants and says why
 // they are written down:
 //
 //   "They exist so the metaphor is tested against, not re-litigated, each

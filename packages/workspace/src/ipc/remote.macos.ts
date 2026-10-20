@@ -15,7 +15,7 @@
 //      (dev: the .ts source directly — the child runs under plain
 //      `node --experimental-strip-types`, not through Metro).
 //   3. storage is REQUIRED — callers must compute an Application Support
-//      path themselves. See docs/workspace-format.md invariant 4: never
+//      path themselves. See docs/format/workspace-format.md invariant 4: never
 //      default corestore storage into a folder that might be cloud-synced.
 
 import { MacOSTransport } from '@workspace.sh/p2p-runtime/ipc/macos';

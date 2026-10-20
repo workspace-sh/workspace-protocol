@@ -18,7 +18,7 @@
 // produce, same `consumeEnvelope` to validate and unwrap. Only the transport
 // differs — a log block instead of a file in a folder.
 //
-// See docs/permissions-model.md ("The two carriers") for the design.
+// See docs/permissions/permissions-model.md ("The two carriers") for the design.
 
 // Bare provides no TextEncoder/TextDecoder globals, and this file runs inside
 // the Bare worklet on iOS/Android. b4a covers both hosts (#243).

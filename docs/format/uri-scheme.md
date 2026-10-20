@@ -312,7 +312,7 @@ An invite link is the workspace link plus one fragment parameter:
 workspace://v1/z6Mk…#invite=<code>
 ```
 
-- **What it is.** `<code>` is a bearer invite in z-base-32 ([`join-by-link.md`](./join-by-link.md) § Links). Opening the link claims the invite, and then the URI resolves as it would without it.
+- **What it is.** `<code>` is a bearer invite in z-base-32 ([`join-by-link.md`](../permissions/join-by-link.md) § Links). Opening the link claims the invite, and then the URI resolves as it would without it.
 - **Not routing.** The resource is the same with the code or without it.
 - **Why the fragment.** A fragment isn't sent to any server a URL passes through.
 - **Fails safe.** A previewer that strips the fragment leaves the plain link, which grants nothing.
@@ -342,7 +342,7 @@ Workspaces with strict privacy posture should use the `policy.json` workspace po
 
 When an app opens a `workspace://` URI:
 
-1. **Parse the URI** — extract the workspace pubkey from the path; parse the version; identify the resource type from the next path segment. If the fragment carries `invite`, claim it first ([`join-by-link.md`](./join-by-link.md) § Claiming an invite)
+1. **Parse the URI** — extract the workspace pubkey from the path; parse the version; identify the resource type from the next path segment. If the fragment carries `invite`, claim it first ([`join-by-link.md`](../permissions/join-by-link.md) § Claiming an invite)
 2. **Derive the Hyperswarm topic** — SHA-256 of the 32-byte public key (without the multicodec prefix), the value a new workspace records as `manifest.topicId`
 3. **Discover peers** — join the Hyperswarm topic via DHT; in parallel, try any `relays` query hints for faster cold-start
 4. **Fetch the workspace bootstrap** — `manifest.json` + `attestation.json` from any peer (~2 KB)
@@ -407,7 +407,7 @@ The admin's Copy Invite Link made this, and Bob opens it. His Workspace app:
 - validates the UCAN inside and unwraps the workspace key;
 - joins as a member.
 
-The invite is single-use and expires after 7 days by default, so a forwarded link admits whoever claims it first. The admin can revoke an unclaimed invite. With the fragment stripped, it is the workspace link, which grants nothing ([`join-by-link.md`](./join-by-link.md)).
+The invite is single-use and expires after 7 days by default, so a forwarded link admits whoever claims it first. The admin can revoke an unclaimed invite. With the fragment stripped, it is the workspace link, which grants nothing ([`join-by-link.md`](../permissions/join-by-link.md)).
 
 ### Document
 
@@ -540,7 +540,11 @@ For high-privacy workspaces (sensitive investigations, regulated content), the w
 ## Cross-references
 
 - [`workspace-format.md`](./workspace-format.md) — the `.workspace` container these URIs address
-- [`discovery.md`](./discovery.md) — DNS TXT and `.well-known/workspace` mechanisms for resolving a domain to a `workspace://` URI
-- [`permissions-model.md`](./permissions-model.md) — the cryptographic protocol
-- [`threat-model.md`](./threat-model.md) — what the URI scheme protects and what it doesn't (leakage rules)
-- [`risks.md`](./risks.md) — failure modes and mitigations
+- [`discovery.md`](../network/discovery.md) — DNS TXT and `.well-known/workspace` mechanisms for resolving a domain to a `workspace://` URI
+- [`permissions-model.md`](../permissions/permissions-model.md) — the cryptographic protocol
+- [`threat-model.md`](../security/threat-model.md) — what the URI scheme protects and what it doesn't (leakage rules)
+- [`risks.md`](../security/risks.md) — failure modes and mitigations
+
+---
+
+Up: [Format](./README.md) · [All docs](../README.md)

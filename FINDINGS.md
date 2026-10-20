@@ -109,7 +109,7 @@ On top of the runtime sits the permissions layer (wrap + UCAN + attestation + po
 - **UCAN library choice ADR** ([#19](https://github.com/workspace-sh/workspace-p2p-spike/issues/19))
 - **`.workspace` folder + archive shape** ([#24](https://github.com/workspace-sh/workspace-p2p-spike/issues/24))
 - **DNS discovery design** ([#25](https://github.com/workspace-sh/workspace-p2p-spike/issues/25)) — doc done; implementation pending
-- **LAN discovery via mDNS** — designed in [`docs/discovery-layers.md`](./docs/discovery-layers.md); implementation deferred (~200 lines on top of Holepunch's `multicast-dns`)
+- **LAN discovery via mDNS** — designed in [`docs/network/discovery-layers.md`](./docs/network/discovery-layers.md); implementation deferred (~200 lines on top of Holepunch's `multicast-dns`)
 - **PAN discovery (Bluetooth / Wi-Fi Direct / AWDL)** — backlogged; revisit when mobile is in scope
 - **Mobile path** ([#6](https://github.com/workspace-sh/workspace-p2p-spike/issues/6)) — separate workstream
 
@@ -120,7 +120,7 @@ Project board: https://github.com/orgs/workspace-sh/projects/6
 ## Open questions (not blockers)
 
 - **Node binary on macOS** — development uses the system `node`; a production RN-macOS app needs a bundled static binary or an assumption that Node is present. Either is tractable.
-- ~~**Corestore persistence**~~ — **resolved** ([ADR 0003](./docs/adr/0003-store-dual-form.md)): the store has two forms. The RocksDB working store lives in app-private storage (macOS Application Support; mobile app containers); `.workspace/store/` carries an append-only serialised transport form, flushed on close/share and hydrated on open. Normative detail in [`workspace-format.md`](./docs/workspace-format.md) § `store/`; app-side implementation tracked in workspace#249.
+- ~~**Corestore persistence**~~ — **resolved** ([ADR 0003](./docs/adr/0003-store-dual-form.md)): the store has two forms. The RocksDB working store lives in app-private storage (macOS Application Support; mobile app containers); `.workspace/store/` carries an append-only serialised transport form, flushed on close/share and hydrated on open. Normative detail in [`workspace-format.md`](./docs/format/workspace-format.md) § `store/`; app-side implementation tracked in workspace#249.
 
 ---
 

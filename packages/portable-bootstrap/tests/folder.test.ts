@@ -1,7 +1,7 @@
 // Tests for the filesystem pack/unpack layer.
 //
 // Exercises writeBundleFolder → readBundleFolder round-trip and verifies the
-// on-disk layout matches docs/workspace-format.md (manifest.json,
+// on-disk layout matches docs/format/workspace-format.md (manifest.json,
 // attestation.json, envelopes/* all under `.workspace/`).
 
 import { test } from 'node:test';
@@ -140,7 +140,7 @@ test('end-to-end from disk: a consumer can unwrap their key after reading from a
 });
 
 // ---------------------------------------------------------------------------
-// On-disk layout: matches docs/workspace-format.md
+// On-disk layout: matches docs/format/workspace-format.md
 // ---------------------------------------------------------------------------
 
 test('on-disk layout: .workspace/ holds manifest, attestation, and envelopes/ subdir', async () => {

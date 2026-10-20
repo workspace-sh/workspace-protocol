@@ -1,7 +1,7 @@
 // Filesystem pack/unpack for a portable bootstrap bundle.
 //
 // Writes a Bundle to the `.workspace/` subdirectory of a `.workspace/`
-// folder per the layout in docs/workspace-format.md:
+// folder per the layout in docs/format/workspace-format.md:
 //
 //   <workspaceDir>/
 //   └── .workspace/
@@ -16,7 +16,7 @@
 // concerns: see issue #9 (key delivery log) and the runtime layer for the
 // store; the working tree is the application's responsibility.
 //
-// See docs/workspace-format.md for the full on-disk layout.
+// See docs/format/workspace-format.md for the full on-disk layout.
 
 import { mkdir, readFile, readdir, writeFile } from 'fs/promises';
 import { join } from 'path';

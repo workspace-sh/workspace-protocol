@@ -2,7 +2,7 @@
 
 What Workspace protects against, and — equally important — what it does
 not. The cryptographic detail lives in
-[`permissions-model.md`](./permissions-model.md); this document is the
+[`permissions-model.md`](../permissions/permissions-model.md); this document is the
 contract that detail serves.
 
 Read this **before** the protocol detail. Knowing which game is being
@@ -98,7 +98,7 @@ future access, not past exposure. Workspace makes the same trade and
 makes it explicit.
 
 The two levers Workspace uses to close future access are detailed in
-[`permissions-model.md`](./permissions-model.md): encryption-layer
+[`permissions-model.md`](../permissions/permissions-model.md): encryption-layer
 (rotate the symmetric key) and topic-layer (drop the peer from the
 Hyperswarm topic). Both are forward-only. Both are honest.
 
@@ -167,7 +167,7 @@ answers every audit question that's actually answerable.
 
 For regulatory or contractual regimes that demand action-level
 evidence ("show me every read of this row"), the workspace policy
-file ([`workspace-format.md`](./workspace-format.md)) can opt into
+file ([`workspace-format.md`](../format/workspace-format.md)) can opt into
 **signed action logging**. When enabled, cooperating clients append
 a signed event to a dedicated audit Hypercore on every decrypt
 (and/or every encrypted write):
@@ -222,7 +222,7 @@ the right tool for those regimes; we don't pretend it is.
 
 The mechanism reuses the same Hypercore + signature primitives the
 rest of the system uses. Schema for enabling it is documented in
-[`workspace-format.md`](./workspace-format.md) under the policy
+[`workspace-format.md`](../format/workspace-format.md) under the policy
 file.
 
 ### `history.ndjson` is a projection of the chain
@@ -252,11 +252,11 @@ caches, show the user a notification) cannot be cryptographically
 enforced — they depend on the client running the cleanup. Workspace
 addresses this with a **workspace policy file** signed by the root
 DID: `.workspace/policy.json` (see
-[`workspace-format.md`](./workspace-format.md) for the schema). The
+[`workspace-format.md`](../format/workspace-format.md) for the schema). The
 policy declares what cooperating apps *should* do on lifecycle events
 (revocation, key rotation, workspace deletion). A revocation notice
 block on the live key delivery log (see
-[`permissions-model.md`](./permissions-model.md)) carries the trigger.
+[`permissions-model.md`](../permissions/permissions-model.md)) carries the trigger.
 
 ### What this protects
 
@@ -361,18 +361,22 @@ design property.
 
 ## Cross-references
 
-- [`permissions-model.md`](./permissions-model.md) — the cryptographic
+- [`permissions-model.md`](../permissions/permissions-model.md) — the cryptographic
   detail this contract serves (including the revocation notice block
   format that triggers cooperative-client cleanup)
-- [`workspace-format.md`](./workspace-format.md) — the container shape
+- [`workspace-format.md`](../format/workspace-format.md) — the container shape
   that distributes the artefacts this contract protects, including
   the schema for the `.workspace/policy.json` file
 - [`risks.md`](./risks.md) — where this could fail and what we're
   doing about it
-- [`lighthouse.md`](./lighthouse.md) — what trusting a Lighthouse
+- [`lighthouse.md`](../lighthouse/README.md) — what trusting a Lighthouse
   does and doesn't expose (it holds bytes, not access)
-- [`ucan-prior-research.md`](./ucan-prior-research.md) — UCAN-side
+- [`ucan-prior-research.md`](../permissions/ucan-prior-research.md) — UCAN-side
   research notes; the `canIssue` and revocation gotchas matter for the
   delegation-chain audit trail
 - [`table-file-format/docs/PERMISSIONS.md`](https://github.com/workspace-sh/table-file-format/blob/develop/docs/PERMISSIONS.md)
   (PR #26) — consumer-side view of the permission model
+
+---
+
+Up: [Security](./README.md) · [All docs](../README.md)

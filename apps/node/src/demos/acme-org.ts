@@ -11,7 +11,7 @@
 //   - K0_org actually does something — log content is sealed under it
 //   - Multiple recipients in one bundle (Bob and Carol both get envelopes)
 //   - The working tree (markdown files) and the encrypted log coexist per
-//     the on-disk layout in docs/workspace-format.md
+//     the on-disk layout in docs/format/workspace-format.md
 //   - Eve (no envelope) cannot decrypt the replicated blocks — proves
 //     that K0_org is what gates readability
 //

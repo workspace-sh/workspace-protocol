@@ -1,6 +1,6 @@
 // Tests for @workspace.sh/ucan-boundary.
 //
-// Covers the regression matrix called out in docs/ucan-prior-research.md:
+// Covers the regression matrix called out in docs/permissions/ucan-prior-research.md:
 // basic delegation, sub-delegation, canIssue override (the gotcha), expiry,
 // whole-second floor (the other gotcha), wrong-recipient detection,
 // serialisation round-trip, and DID parity with @workspace.sh/p2p-runtime.
