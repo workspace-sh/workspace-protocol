@@ -4,13 +4,14 @@ Small functions that live inside a Workspace document, run in a sandbox
 on a device that has agreed to run them, and can show a live value or
 keep one in the document.
 
-**Status:** exploration. Nothing here is decided unless it says so, and
-nothing is built. This is a spike into how documents can carry functions
-that work over Workspace's peer-to-peer loop: naive on purpose, written
-down so the thinking can move. Tracking: workspace-sh/workspace#699.
+**Status:** a spike within this spec. Nothing here is decided unless it
+says so, and nothing is built. It records the thinking so far on
+documents carrying functions that work over Workspace's peer-to-peer
+loop, what they could be used for, and prior art: naive on purpose, so
+the thinking can move. Tracking: workspace-sh/workspace#699.
 
-"Document action" is a working name, chosen to say what the thing is.
-A plainer or better one is welcome; an invented one isn't.
+"Document action" (or "document function") describes the kind of thing
+it is; it isn't an official name.
 
 ---
 
