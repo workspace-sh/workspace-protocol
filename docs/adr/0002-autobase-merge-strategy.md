@@ -74,3 +74,7 @@ throughout.
   markdown from per-block LWW to a text CRDT (the hook makes this local).
 - A format needs richer merge than LWW (e.g. ordered lists with move
   semantics) → add a bespoke hook for it.
+
+---
+
+Up: [Decisions](./README.md) · [All docs](../README.md)

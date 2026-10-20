@@ -10,7 +10,7 @@
 //   Terminal 1:  npm -w @workspace.sh/p2p-spike-node run demo:bootstrap
 //   Terminal 2:  npm -w @workspace.sh/p2p-spike-node run demo:acme:live
 //
-// See docs/discovery-layers.md for why we do this (and how it relates to
+// See docs/network/discovery-layers.md for why we do this (and how it relates to
 // the layered local / LAN / WAN discovery story).
 
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';

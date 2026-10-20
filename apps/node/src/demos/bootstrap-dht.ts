@@ -5,7 +5,7 @@
 // you configure — nothing leaves your machine.
 //
 // This is the layered-discovery story's escape hatch for testing (see
-// docs/discovery-layers.md). It's also the mechanism a Lighthouse can sit
+// docs/network/discovery-layers.md). It's also the mechanism a Lighthouse can sit
 // on top of when an org wants to run its own DHT for a remote team.
 
 import { createRequire } from 'node:module';

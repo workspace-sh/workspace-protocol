@@ -75,7 +75,7 @@ directly before falling through to the public DHT. The Lighthouse is
 both a peer that replicates workspace state and a discovery aid for
 finding other peers on its network.
 
-See [`lighthouse.md`](./lighthouse.md) for the Lighthouse concept
+See [`lighthouse.md`](../lighthouse/README.md) for the Lighthouse concept
 itself. Note the distinction:
 
 - **Same-LAN orgs** (everyone in one office, household, etc.):
@@ -158,22 +158,26 @@ per-platform engineering (AWDL is private API on Apple platforms;
 Wi-Fi Direct works well on Android but is constrained on iOS);
 deferred until mobile is in scope.
 
-Tracked as a backlog item; see [`risks.md`](./risks.md) and
-[`FINDINGS.md`](../FINDINGS.md).
+Tracked as a backlog item; see [`risks.md`](../security/risks.md) and
+[`FINDINGS.md`](../../FINDINGS.md).
 
 ---
 
 ## Cross-references
 
-- [`workspace-format.md`](./workspace-format.md) — the on-disk
+- [`workspace-format.md`](../format/workspace-format.md) — the on-disk
   format these layers replicate
-- [`permissions-model.md`](./permissions-model.md) — the
+- [`permissions-model.md`](../permissions/permissions-model.md) — the
   cryptographic protocol that runs once peers are connected
-- [`lighthouse.md`](./lighthouse.md) — the always-on-node concept
+- [`lighthouse.md`](../lighthouse/README.md) — the always-on-node concept
   used at layer 3
 - [`discovery.md`](./discovery.md) — DNS TXT +
   `.well-known/workspace` discovery; resolves a *domain* to a
   workspace URI (distinct concern from the peer-to-peer discovery
   this doc covers)
-- [`risks.md`](./risks.md) — relay / mobile / casual-user
+- [`risks.md`](../security/risks.md) — relay / mobile / casual-user
   availability risks that the LAN and Lighthouse layers help close
+
+---
+
+Up: [Network](./README.md) · [All docs](../README.md)

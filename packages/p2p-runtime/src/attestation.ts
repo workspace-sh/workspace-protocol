@@ -9,7 +9,7 @@
 // It does **not** defeat fraudulent identity claims — verifying that a given
 // `did:key:zABC…` is genuinely "Acme's org root" still requires an
 // out-of-band channel (signed announcement, well-known URL, fingerprint
-// comparison). See `docs/threat-model.md` for the explicit framing.
+// comparison). See `docs/security/threat-model.md` for the explicit framing.
 //
 // The signatures are ed25519 via `hypercore-crypto`, the algorithm the UCAN
 // boundary verifies with @noble/ed25519. Either implementation verifies the
@@ -180,7 +180,7 @@ function attestedLogs(logs: AttestedLogs): AttestedLogs {
  *
  * Caveat: this does not prove that `rootDid` belongs to the legitimate
  * workspace owner. That trust comes from an out-of-band channel — see
- * `docs/threat-model.md` "What Workspace does not protect."
+ * `docs/security/threat-model.md` "What Workspace does not protect."
  */
 export function verifyWorkspaceAttestation(att: SignedAttestation): boolean {
   // Re-derive the canonical payload bytes and ensure they match what's stored.

@@ -39,14 +39,14 @@ export interface P2PRuntimeNativeModule {
    * This device's persistent 32-byte identity seed, as hex. Get-or-create:
    * generated via SecRandomCopyBytes and stored in the macOS Keychain on
    * first call; the same seed is returned on every subsequent call. See
-   * docs/identity-recovery.md (device-linking flow).
+   * docs/permissions/identity-recovery.md (device-linking flow).
    */
   identitySeed(): Promise<string>;
 
   /**
    * `<Application Support>/<bundle id>/p2p/<subpath>`, created if needed.
    * Never default corestore storage into a workspace's own (possibly
-   * cloud-synced) folder — see docs/workspace-format.md invariant 4.
+   * cloud-synced) folder — see docs/format/workspace-format.md invariant 4.
    */
   storagePath(subpath: string): Promise<string>;
 

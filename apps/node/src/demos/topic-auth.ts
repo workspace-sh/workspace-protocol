@@ -13,7 +13,7 @@
 //     fails the gate; her connection is dropped and she replicates nothing.
 //
 // Runs over a real Hyperswarm against a private in-process bootstrap (no
-// public DHT, no host network impact). See docs/permissions-model.md
+// public DHT, no host network impact). See docs/permissions/permissions-model.md
 // ("Lever 2 — Topic-layer").
 
 import { createRequire } from 'node:module';

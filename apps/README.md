@@ -1,6 +1,6 @@
 # Apps
 
-Per-host harnesses that consume `@workspace.sh/p2p-runtime`. Empty until the relevant phase of [PLAN.md](../PLAN.md) begins.
+Per-host harnesses that consume `@workspace.sh/p2p-runtime`. Empty until that platform's work begins (see [Status](../README.md#status)).
 
 When ready, scaffold:
 
@@ -10,7 +10,7 @@ When ready, scaffold:
 | `mobile/`   | Expo 55 dev-client with `react-native-bare-kit` | `npx create-expo-app@latest --template blank-typescript`              | 2       |
 | `macos/`    | react-native-macos host with bespoke TurboModule | scaffold from `react-native-macos` init template                      | 3       |
 | `web/`      | browser smoke harness for the TS interface only | Vite + React + RSD (matching `workspace-sh/table-file-format`'s shape) | (any)  |
-| `windows/`  | (placeholder; see PLAN.md out-of-scope note)    | not investigated                                                      | future |
+| `windows/`  | (placeholder; not yet in scope)    | not investigated                                                      | future |
 
 Once an app exists, add it to the root `package.json` `workspaces` array (alongside `packages/*`).
 

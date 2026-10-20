@@ -5,7 +5,7 @@
 
 What Brooklyn Zelenka's work (WNFS at Fission; UCAN; Keyhive, BeeKEM and Beelay at
 Ink & Switch) teaches the existing design in [`permissions-model.md`](./permissions-model.md),
-[`workspace-format.md`](./workspace-format.md) § Permission semantics, and the table format's
+[`workspace-format.md`](../format/workspace-format.md) § Permission semantics, and the table format's
 `docs/PERMISSIONS.md`.
 
 **Legend:** **[R]** read in the linked primary source. **[I]** inference.
@@ -330,3 +330,7 @@ WNFS and Keyhive.
 6. How much does the rotation cascade cost at real folder depths and grant counts, compared with a group key agreement per scope?
 7. How do folder scopes (per-core) and field tiers (per-key) compose in one `.table`?
 8. Should Workspace ever allow Public at edit, as Keyhive does "with caution"?
+
+---
+
+Up: [Permissions and identity](./README.md) · [All docs](../README.md)
