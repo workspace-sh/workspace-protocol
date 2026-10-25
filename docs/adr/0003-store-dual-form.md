@@ -1,6 +1,6 @@
 # ADR 0003 — The store has two forms: RocksDB working copy, serialised transport copy
 
-**Status:** Accepted · **Date:** 2026-08 · **Tracks:** [#32](https://github.com/workspace-sh/workspace-p2p-spike/issues/32), [workspace#249](https://github.com/workspace-sh/workspace/issues/249)
+**Status:** Accepted · **Date:** 2026-08 · **Tracks:** [#32](https://github.com/workspace-sh/workspace-protocol/issues/32), [workspace#249](https://github.com/workspace-sh/workspace/issues/249)
 
 ## Context
 

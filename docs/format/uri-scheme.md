@@ -153,7 +153,7 @@ The path segment after `/document/<id>` (when not a reserved keyword) is a **for
 Three locator patterns are common:
 
 - **Structural** — addresses tied to the document's intrinsic structure (line numbers, pages, timestamps, coordinates, spreadsheet cells). Non-leaky because the structure is exposed when the document is opened anyway.
-- **Native opaque IDs** — formats that already carry IDs in their spec (JSON Canvas nodes, `.table/` rows, hidden columns) use those directly. Opaque by format design.
+- **Native opaque IDs** — formats that already carry IDs in their spec (JSON Canvas nodes, `.table` rows and field names) use those directly. Opaque by format design.
 - **Opaque IDs in workspace state** — formats that have no native ID slots (markdown is the canonical case) get IDs assigned at creation; the mapping `(docId, sectionId) → heading text` lives in the workspace's Hyperbee index.
 
 The URI scheme is **format-agnostic**. Each format spec defines:
@@ -164,7 +164,7 @@ The URI scheme is **format-agnostic**. Each format spec defines:
 
 ### One constraint: locators are a single path segment
 
-A locator occupies one path segment (between `/` separators). If a format wants nested addressing, it encodes the nesting inside a single segment using its own conventions — e.g. `slide12-elementX`, `9MnPp-h_a3b9` (cell as row-column), `p5-200,400` (page+position).
+A locator occupies one path segment (between `/` separators). If a format wants nested addressing, it encodes the nesting inside a single segment using its own conventions — e.g. `slide12-elementX`, `table=deals&row=dl-1&field=amount` (a `.table` cell), `p5-200,400` (page+position).
 
 The URI scheme never spans a locator across multiple path segments. Keeps parsing simple and the reserved-keyword check unambiguous.
 
@@ -207,19 +207,41 @@ workspace://v1/z6Mk…/document/4Hp8…/100,200-400,300      ← region (top-lef
 
 The `node-` prefix disambiguates from coordinates (which contain commas). Regions are two coordinate pairs joined by `-`, matching how other ranges work (`L42-L60`, `p5-p7`, `2:34-3:00`).
 
-### Tables (.table/)
+### Tables (.table)
 
-Rows have stable primary keys (their `id` field in `rows.ndjson`). Columns have stable opaque IDs in `schema.json` (workspace-public for tier-0; in `hiddenFields` for tier-gated). Cells are composites.
+A `.table` is a bundle of one or more tables, as a folder or a single
+file ([SPEC section 1](https://github.com/workspace-sh/table-file-format/blob/develop/docs/SPEC.md#1-directory-layout)); its document ID
+addresses the bundle. Its locator is the format's own address
+fragment ([SPEC section 10](https://github.com/workspace-sh/table-file-format/blob/develop/docs/SPEC.md#10-addressing)), the part after `#`,
+as one path segment: `key=value` pairs joined by `&`.
+
+- `table=<name>`: a table in the bundle, by its name (the directory
+  under `tables/`). It may be left out when the bundle holds one table.
+- `row=<id>`: a row, by its system `id`. Writers mint it, nobody edits
+  it, and it's unique within its table, not the bundle, so a bundle of
+  several tables names the table too.
+- `field=<name>`: a column, by its field's `name`. A name never
+  changes: renaming a field changes its `title` (SPEC section 2,
+  "Schema evolution"), so the locator survives renames and reordering.
+- `view=<id>`: a view.
+
+A row and a field together are a cell. Values are percent-encoded
+(`encodeURIComponent`): an `id` may be any non-empty string, though the
+ids writers mint are lowercase base36.
 
 ```
-workspace://v1/z6Mk…/document/4Hp8…/9MnPpQrStUv           ← row
-workspace://v1/z6Mk…/document/4Hp8…/column-h_a3b9         ← column
-workspace://v1/z6Mk…/document/4Hp8…/9MnPpQrStUv-h_a3b9    ← cell (row × column)
+workspace://v1/z6Mk…/document/4Hp8…/table=deals&row=dl-1                ← row
+workspace://v1/z6Mk…/document/4Hp8…/table=deals&field=amount            ← column
+workspace://v1/z6Mk…/document/4Hp8…/table=deals&row=dl-1&field=amount   ← cell
+workspace://v1/z6Mk…/document/4Hp8…/table=deals&view=pipeline           ← view
+workspace://v1/z6Mk…/document/4Hp8…/row=p1                              ← a one-table bundle
 ```
 
-The `column-` prefix disambiguates from rows (both use opaque base58btc IDs without the prefix). Cell is composite via `-` separator.
-
-`.table/` uses stable IDs rather than positional addressing because the format is built around primary keys; row/column reordering is expected to preserve URLs.
+**Names are visible.** A link names its table and field, as the
+schema already does to every member. The values aren't in it. A field
+whose name is itself sensitive would need an opaque ID instead, from
+the hidden schema entries [`workspace-format.md`](./workspace-format.md)
+proposes (planned, not in the `.table` spec).
 
 ### CSV — A1 notation
 
@@ -234,7 +256,7 @@ workspace://v1/z6Mk…/document/4Hp8…/B          ← entire column B
 
 Column letters: A, B, C…Z, AA, AB…ZZ, AAA…AAZ, etc. Row numbers: 1-indexed.
 
-Locators are positional — they shift if rows or columns are reordered. That's a CSV-format property, not a URI scheme issue. For formats that need stable cross-edit addressing (like `.table/`), use the ID-bearing format instead.
+Locators are positional — they shift if rows or columns are reordered. That's a CSV-format property, not a URI scheme issue. For formats that need stable cross-edit addressing (like `.table`), use the ID-bearing format instead.
 
 ### PDF
 
@@ -366,7 +388,7 @@ When an app opens a `workspace://` URI:
 | Workspace pubkey | `.workspace/manifest.json` (verified by attestation) | O(1), read once at bootstrap |
 | Document ID | Hyperbee index inside the workspace's data Hypercore store | O(log n), sparse-fetched |
 | Sub-resource locator (markdown sections, PDF sections) | Hyperbee index keyed by `(docId, sectionId)` inside the workspace's data Hypercore store | O(log n), sparse-fetched |
-| Sub-resource locator (canvas nodes, .table rows/columns) | inside the document file itself (format-native) | O(1) within the open document |
+| Sub-resource locator (canvas nodes, .table rows/fields) | inside the document file itself (format-native) | O(1) within the open document |
 | Sub-resource locator (positional: CSV cells, PDF pages, video timestamps, code lines) | structural — no storage; resolved by the format's intrinsic addressing | O(1) within the open document |
 | Comment ID | Hyperbee | O(log n) |
 | Team ID | Hyperbee | O(log n) |
@@ -443,10 +465,11 @@ workspace://v1/z6MkpKpf…/document/4Hp8KqRtFmYxNbCvDgHpKr/100,200-400,300     �
 ### Table cell
 
 ```
-workspace://v1/z6MkpKpf…/document/4Hp8KqRtFmYxNbCvDgHpKr/9MnPp-h_a3b9
+workspace://v1/z6MkpKpf…/document/4Hp8KqRtFmYxNbCvDgHpKr/table=deals&row=dl-1&field=amount
 ```
 
-Row `9MnPp`, column `h_a3b9` (an opaque ID from `schema.json` — could be a public-tier column with its name visible in the schema, or a tier-gated column whose name is in `hiddenFields`; the URI is identical in both cases).
+Table `deals`, row `dl-1`, field `amount`: the `.table` format's own
+address (see "Tables" above).
 
 ### CSV cell
 
