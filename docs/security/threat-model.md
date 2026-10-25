@@ -176,7 +176,7 @@ a signed event to a dedicated audit Hypercore on every decrypt
 {
   "actor":     "did:key:zBob…",
   "action":    "decrypt",
-  "subject":   "people.table#table=employees&row=r1&field=salary",
+  "subject":   "people.table#table=employees&row=q8kx1fw6mze5jbsto4hyrdgn3c&field=salary",
   "timestamp": 1717200000,
   "client":    "Workspace/1.2.3",
   "signature": "<base64>"
