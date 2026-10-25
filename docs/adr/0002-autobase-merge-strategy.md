@@ -1,6 +1,6 @@
 # ADR 0002 — Multi-writer merge: per-format LWW over Autobase
 
-**Status:** Accepted (design; implementation tracked in [#11](https://github.com/workspace-sh/workspace-p2p-spike/issues/11) / [#12](https://github.com/workspace-sh/workspace-p2p-spike/issues/12)) · **Date:** 2026-06
+**Status:** Accepted (design; implementation tracked in [#11](https://github.com/workspace-sh/workspace-protocol/issues/11) / [#12](https://github.com/workspace-sh/workspace-protocol/issues/12)) · **Date:** 2026-06
 
 ## Context
 
