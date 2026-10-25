@@ -101,17 +101,17 @@ On top of the runtime sits the permissions layer (wrap + UCAN + attestation + po
 
 ## Open work (tracked on the project board)
 
-- ~~**Live key delivery log** ([#9](https://github.com/workspace-sh/workspace-p2p-spike/issues/9))~~ — **implemented**; remaining: scan-efficiency tuning + GC of superseded blocks
-- ~~**Topic-layer authentication** ([#10](https://github.com/workspace-sh/workspace-p2p-spike/issues/10))~~ — **implemented**: connection-time membership gate (Noise key bound to DID, UCAN verified to root before replication); remaining: topic rotation on departure
-- **Autobase wrapper** ([#11](https://github.com/workspace-sh/workspace-p2p-spike/issues/11)) + **merge strategy** ([#12](https://github.com/workspace-sh/workspace-p2p-spike/issues/12)) — multi-writer document API
-- **Identity recovery / device linking** ([#17](https://github.com/workspace-sh/workspace-p2p-spike/issues/17))
-- **MLS upgrade-path placeholder** ([#18](https://github.com/workspace-sh/workspace-p2p-spike/issues/18))
-- **UCAN library choice ADR** ([#19](https://github.com/workspace-sh/workspace-p2p-spike/issues/19))
-- **`.workspace` folder + archive shape** ([#24](https://github.com/workspace-sh/workspace-p2p-spike/issues/24))
-- **DNS discovery design** ([#25](https://github.com/workspace-sh/workspace-p2p-spike/issues/25)) — doc done; implementation pending
+- ~~**Live key delivery log** ([#9](https://github.com/workspace-sh/workspace-protocol/issues/9))~~ — **implemented**; remaining: scan-efficiency tuning + GC of superseded blocks
+- ~~**Topic-layer authentication** ([#10](https://github.com/workspace-sh/workspace-protocol/issues/10))~~ — **implemented**: connection-time membership gate (Noise key bound to DID, UCAN verified to root before replication); remaining: topic rotation on departure
+- **Autobase wrapper** ([#11](https://github.com/workspace-sh/workspace-protocol/issues/11)) + **merge strategy** ([#12](https://github.com/workspace-sh/workspace-protocol/issues/12)) — multi-writer document API
+- **Identity recovery / device linking** ([#17](https://github.com/workspace-sh/workspace-protocol/issues/17))
+- **MLS upgrade-path placeholder** ([#18](https://github.com/workspace-sh/workspace-protocol/issues/18))
+- **UCAN library choice ADR** ([#19](https://github.com/workspace-sh/workspace-protocol/issues/19))
+- **`.workspace` folder + archive shape** ([#24](https://github.com/workspace-sh/workspace-protocol/issues/24))
+- **DNS discovery design** ([#25](https://github.com/workspace-sh/workspace-protocol/issues/25)) — doc done; implementation pending
 - **LAN discovery via mDNS** — designed in [`docs/network/discovery-layers.md`](./docs/network/discovery-layers.md); implementation deferred (~200 lines on top of Holepunch's `multicast-dns`)
 - **PAN discovery (Bluetooth / Wi-Fi Direct / AWDL)** — backlogged; revisit when mobile is in scope
-- **Mobile path** ([#6](https://github.com/workspace-sh/workspace-p2p-spike/issues/6)) — separate workstream
+- **Mobile path** ([#6](https://github.com/workspace-sh/workspace-protocol/issues/6)) — separate workstream
 
 Project board: https://github.com/orgs/workspace-sh/projects/6
 

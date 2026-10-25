@@ -6,13 +6,17 @@ spike-side companion to
 which is the consumer-facing view. This document captures the
 underlying cryptographic and protocol choices.
 
-**Status:** design + partial implementation. The wrap primitive, UCAN
-boundary module, root attestation primitive, and bootstrap envelope
-flow are implemented (`@workspace.sh/p2p-runtime`, `@workspace.sh/ucan-boundary`,
-`@workspace.sh/portable-bootstrap`). The live key delivery log (#9),
-topic-layer auth at the noise handshake (#10), and the Autobase
-multi-writer wrapper (#11) remain to be built. Tracked in
-[issue #5](https://github.com/workspace-sh/workspace-p2p-spike/issues/5).
+**Status:** design + partial implementation. Built
+(`@workspace.sh/p2p-runtime`, `@workspace.sh/ucan-boundary`,
+`@workspace.sh/portable-bootstrap`): the wrap primitive, the UCAN
+boundary (UCAN 1.0 through `iso-ucan`), root attestation, bootstrap
+envelopes, the live key delivery log (#9), transparent log
+encryption, and the connection-time membership gate with its
+revocation check (#10). Still to build: rotating the discovery topic
+when someone leaves (#10), and the Autobase multi-writer wrapper
+(#11), whose merge rule is decided in
+[ADR 0002](../adr/0002-autobase-merge-strategy.md) (#12). Tracked in
+[issue #5](https://github.com/workspace-sh/workspace-protocol/issues/5).
 
 ---
 
@@ -175,7 +179,7 @@ is byte-identical to a bundle envelope — same `createEnvelope` produces
 it, same `consumeEnvelope` validates and unwraps it.
 
 **Implemented** in `@workspace.sh/portable-bootstrap`
-([#9](https://github.com/workspace-sh/workspace-p2p-spike/issues/9)):
+([#9](https://github.com/workspace-sh/workspace-protocol/issues/9)):
 `publishDelivery(log, envelope)` appends; `scanDeliveries(log, {selfDid,
 selfSecretKey, rootDid, fromCursor})` reads from a cursor, returns the
 deliveries addressed to this peer (validated + unwrapped) plus a new
@@ -504,8 +508,10 @@ address is never shared with the wider org.
   (#10): rotate the discovery topic alongside `K0_org` so a revoked peer
   can't rediscover the swarm. (Connection-time membership auth itself is
   implemented — see above.)
-- **Autobase wrapper (#11)** + **merge strategy (#12)** — multi-writer
-  document API + concurrent-edit semantics
+- **Autobase wrapper (#11)** + **merge (#12)** — the multi-writer
+  document API; the merge rule is decided (last writer wins per
+  format-defined entity, [ADR 0002](../adr/0002-autobase-merge-strategy.md)),
+  not built
 - **Revocation notice block + policy enforcement** — block format
   defined above; needs the live key delivery log (#9) and
   app-side honour-the-policy logic
@@ -552,9 +558,9 @@ address is never shared with the wider org.
   specifics predate the move to iso-ucan)
 - [`table-file-format/docs/PERMISSIONS.md`](https://github.com/workspace-sh/table-file-format/blob/develop/docs/PERMISSIONS.md) —
   consumer-side view of this same model, per file type
-- [Issue #5](https://github.com/workspace-sh/workspace-p2p-spike/issues/5) —
+- [Issue #5](https://github.com/workspace-sh/workspace-protocol/issues/5) —
   UCAN + Hypercore identity bridge (now expanded by this doc)
-- [Issue #6](https://github.com/workspace-sh/workspace-p2p-spike/issues/6) —
+- [Issue #6](https://github.com/workspace-sh/workspace-protocol/issues/6) —
   mobile path
 
 ---
