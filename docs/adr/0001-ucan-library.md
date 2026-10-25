@@ -1,6 +1,6 @@
 # ADR 0001 — UCAN library: ucanto, not iso-ucan
 
-**Status:** Superseded (14 Sep 2026) by UCAN 1.0 through iso-ucan — see below · **Date:** 2026-06 · **Tracks:** [#19](https://github.com/workspace-sh/workspace-p2p-spike/issues/19)
+**Status:** Superseded (14 Sep 2026) by UCAN 1.0 through iso-ucan — see below · **Date:** 2026-06 · **Tracks:** [#19](https://github.com/workspace-sh/workspace-protocol/issues/19)
 
 ## Superseded: UCAN 1.0 through iso-ucan
 
@@ -33,10 +33,10 @@ The ucanto decision below is kept as the record of why it was chosen then.
 Workspace's permissions model expresses access as UCAN delegation
 chains rooted at a workspace's identity. We needed a JS UCAN library to
 mint, validate, serialise, and revoke delegations. The decision is
-recorded here *after* the fact: [#8](https://github.com/workspace-sh/workspace-p2p-spike/issues/8)
+recorded here *after* the fact: [#8](https://github.com/workspace-sh/workspace-protocol/issues/8)
 already shipped `@workspace.sh/ucan-boundary` on ucanto, and
-[#10](https://github.com/workspace-sh/workspace-p2p-spike/issues/10)
-(topic-layer auth) and [#15](https://github.com/workspace-sh/workspace-p2p-spike/issues/15)
+[#10](https://github.com/workspace-sh/workspace-protocol/issues/10)
+(topic-layer auth) and [#15](https://github.com/workspace-sh/workspace-protocol/issues/15)
 (bootstrap envelopes) build on it. This ADR captures the choice and,
 more importantly, the triggers for revisiting it.
 
@@ -85,7 +85,7 @@ surface, never ucanto directly.
   it becomes a real cost only if Workspace must integrate a non-ucanto
   UCAN service.
 - **A future swap is contained, not free.** The boundary module
-  ([#8](https://github.com/workspace-sh/workspace-p2p-spike/issues/8))
+  ([#8](https://github.com/workspace-sh/workspace-protocol/issues/8))
   means a library change is a small, single-file change *mechanically*
   — but the real cost is the capability-model rewrite (ucanto's
   `with` + `can` → ucan-wg's `sub` + `cmd` + `pol`). The containment is

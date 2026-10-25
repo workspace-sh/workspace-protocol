@@ -21,7 +21,7 @@ operates entirely separately. See
 the story.
 
 **Status:** design — implementation pending. Tracked in
-[issue #25](https://github.com/workspace-sh/workspace-p2p-spike/issues/25).
+[issue #25](https://github.com/workspace-sh/workspace-protocol/issues/25).
 
 ---
 

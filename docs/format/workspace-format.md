@@ -14,7 +14,7 @@ collaboration experience and the portability that lets you take your
 data anywhere.
 
 The contained files keep their own format identity (`.md`, `.canvas`,
-`.table/`, anything else) and can be opened by any tool that
+`.table`, anything else) and can be opened by any tool that
 understands them — when viewed outside a workspace they are just
 files. Inside a workspace, they gain field-level permission
 enforcement, because the workspace is the primitive container for
@@ -135,11 +135,12 @@ my-org.workspace/                      ← the workspace itself
 ├── ideas/
 │   └── q2-retro.canvas
 ├── data/
-│   ├── customers.table/               ← public-within-workspace by default
-│   └── employees.table/               ← per-field permission enforcement
-│       ├── schema.json                ← public field declarations + hidden-field IDs
-│       ├── rows.ndjson                ← rows; only public fields appear here
-│       └── bodies/
+│   ├── customers.table                ← a single-file .table; public-within-workspace by default
+│   └── people.table/                  ← a .table folder, with per-field permissions (planned)
+│       └── tables/employees/
+│           ├── schema.json            ← public field declarations + hidden-field IDs
+│           ├── rows/0001.ndjson       ← rows; only public fields appear here
+│           └── bodies/
 └── .workspace/                        ← hidden container metadata + encrypted state
     ├── manifest.json                  ← workspace identity, root DID, topic
     ├── attestation.json               ← root signature over the manifest
@@ -186,8 +187,9 @@ Workspace app, for an authorised viewer, decrypts them into memory
 when the user opens them — and shows them in the UI — but does not
 materialise them to disk.
 
-For per-field encryption in a `.table/`, this means `rows.ndjson` on
-disk contains only public fields:
+For per-field encryption in a `.table` (planned: field tiers aren't
+built), this means the rows files (`rows/*.ndjson`) on disk contain
+only public fields:
 
 ```json
 {"id": "r1", "name": "Alice", "team": "Eng"}
@@ -213,7 +215,7 @@ is already the right thing to share. No "export" step needed for
 safety.
 
 The trade-off: viewing or editing your own tier-gated content
-requires the Workspace app. You cannot `cat rows.ndjson` and see
+requires the Workspace app. You cannot `cat` the rows files and see
 your own salary; you open the table in Workspace and the app
 decrypts the value for the UI. This is the cost of the
 copy-paste-safe property, and it's the right trade for a consumer
@@ -316,15 +318,18 @@ break locator stability or section IDs:
 - **Markdown** — match-by-current-text on headings preserves
   section IDs across edits, even when headings are reordered or
   reworded slightly. See [`uri-scheme.md`](./uri-scheme.md).
-- **`.table/`** — `rows.ndjson` is parsed; row-level adds /
-  modifies / removes become individual log entries. Per-row
-  permission tiers are preserved.
+- **`.table`** — the rows files are parsed; row-level adds /
+  modifies / removes become individual log entries. Per-field
+  permission tiers are preserved. Not built: today each file of a
+  `.table` folder is its own log entry, holding its whole contents,
+  last write wins by path (a single-file `.table` is one entry);
+  per-format reconciliation is workspace#222.
 - **`.canvas`** — node-level diff against the in-log graph.
 - **Unknown formats** — opaque blob replace.
 
-Cost: editing a tier-gated `.table/` row externally is only
+Cost: editing a tier-gated `.table` row externally is only
 possible if the user is authorised to read it. Otherwise the row
-doesn't appear in `rows.ndjson` on their disk and external tools
+doesn't appear in the rows files on their disk and external tools
 can't edit what they can't see. This is the design — tier-gated
 content exists only as encrypted bytes outside the app.
 
@@ -401,7 +406,7 @@ changes underneath them.
 
 Designed; implementation pending. Tracked alongside the rest of
 the working-tree work in
-[#24](https://github.com/workspace-sh/workspace-p2p-spike/issues/24).
+[#24](https://github.com/workspace-sh/workspace-protocol/issues/24).
 
 ### A note on holding several
 
@@ -591,7 +596,7 @@ appends one signed block per action:
 {
   "actor":     "did:key:zBob…",
   "action":    "decrypt",
-  "subject":   "employees.table/r1/salary",
+  "subject":   "people.table#table=employees&row=r1&field=salary",
   "timestamp": 1717200000,
   "client":    "Workspace/1.2.3",
   "signature": "<base64>"
@@ -768,7 +773,7 @@ A workspace can contain a mix of:
 
 - **Workspace-public content** — readable by any peer holding the
   workspace's base key (`K0_org`). The default for `.md`, `.canvas`,
-  and most `.table/` files.
+  and most `.table` files.
 - **Tier-gated content** — encrypted with tier-specific keys (`K1`,
   `K2`, `K_hr`, `K_admin`, etc.) distributed via UCAN delegation.
   Required for sensitive content; opt-in via `x-tier` annotations
@@ -786,11 +791,14 @@ terminates at their DID. The audit trail is the chain itself
 everyone can read) or tier-gated as a whole file (encrypted in the
 store, only authorised viewers see it in the working tree).
 
-**`.table/`** — gains field-level tiering when inside a workspace.
-Fields without `x-tier` are tier 0 (workspace-public). Fields with
-`x-tier: 1, 2, ...` are encrypted in the store. `rows.ndjson` on disk
-contains only the tier-0 fields. `schema.json` declares both the
-public and the hidden field IDs (see below).
+**`.table`** — gains field-level tiering when inside a workspace
+(planned, not built). Fields without `x-tier` are tier 0
+(workspace-public). Fields with `x-tier: 1, 2, ...` are encrypted in
+the store. The rows files on disk contain only the tier-0 fields.
+`schema.json` declares both the public and the hidden field IDs (see
+below). `x-tier` is an extension key, which the `.table` spec lets a
+schema carry (third-party keys take an `x-` prefix; readers ignore
+them, writers keep them).
 
 Refer to
 [`table-file-format/docs/PERMISSIONS.md`](https://github.com/workspace-sh/table-file-format/blob/develop/docs/PERMISSIONS.md)
@@ -807,7 +815,8 @@ supports gating the schema entry too.
 
 ### Mechanism
 
-`schema.json` declares two arrays:
+`schema.json` declares two arrays (`x-hiddenFields` takes the `x-`
+prefix the `.table` spec asks of extension keys):
 
 ```json
 {
@@ -816,7 +825,7 @@ supports gating the schema entry too.
     { "name": "team",   "type": "string" },
     { "name": "salary", "type": "number", "x-tier": 2 }
   ],
-  "hiddenFields": [
+  "x-hiddenFields": [
     { "id": "h_a3b9", "tier": "redundancy" },
     { "id": "h_c4d2", "tier": "redundancy" }
   ]
@@ -824,12 +833,12 @@ supports gating the schema entry too.
 ```
 
 The visible `fields` array lists fields whose names are
-workspace-public. The `hiddenFields` array lists opaque IDs plus
+workspace-public. The `x-hiddenFields` array lists opaque IDs plus
 their tier hints — enough for the Workspace app to know "two
 additional fields exist at the `redundancy` tier" but nothing about
 *what* those fields are.
 
-For each `hiddenFields[i].id`, a sealed entry in the encrypted store
+For each `x-hiddenFields[i].id`, a sealed entry in the encrypted store
 contains the full schema entry:
 
 ```json
@@ -843,7 +852,7 @@ encrypted `(rowId, h_a3b9)` blocks in the store.
 
 ### What each viewer sees
 
-| Viewer | `schema.json` | `rows.ndjson` |
+| Viewer | `schema.json` | rows files |
 |---|---|---|
 | Non-Workspace tool | `name`, `team`, `salary` + 2 opaque hidden IDs | only public field values per row |
 | Workspace member without the `redundancy` key | same as above | same as above |
@@ -853,7 +862,7 @@ The unauthorised reader knows "two hidden fields exist at the
 `redundancy` tier" but nothing else. Existence + count + tier hint
 are workspace-public; semantics are sealed. If the *existence* of a
 schema field being sensitive matters too (i.e. you don't want anyone
-to know there are any hidden fields at all), the `hiddenFields`
+to know there are any hidden fields at all), the `x-hiddenFields`
 array can be omitted entirely and the IDs distributed via the live
 key delivery log — more aggressive but possible.
 
@@ -870,13 +879,13 @@ viewer's machine.
 
 ### Standalone-table portability
 
-If a `.table/` is taken out of a workspace (moved, exported as a
+If a `.table` is taken out of a workspace (moved, exported as a
 standalone file for use in a non-Workspace tool), it carries only
-its own `schema.json` and `rows.ndjson`. The encrypted blobs in
+its own files: each table's `schema.json` and rows files. The encrypted blobs in
 `.workspace/store/` don't travel — they were workspace-container
 state.
 
-On export, the format strips the `hiddenFields` array from the
+On export, the format strips the `x-hiddenFields` array from the
 exported `schema.json` (since the references would be dead anyway).
 The standalone table is a clean, self-contained data file of the
 tier-0 public content.
@@ -931,7 +940,7 @@ adds an envelope; everything else is regular file sharing.
 
 ### Export plaintext — explicit "leave the protection layer"
 
-A separate UX flow: "export this `.table/` as a standalone file,"
+A separate UX flow: "export this `.table` as a standalone file,"
 or "export the entire workspace as a plain folder." Decrypts
 everything the current user is authorised to read and writes it to a
 new folder *outside* the `.workspace/` container. No `.workspace/`
@@ -977,14 +986,14 @@ exist when the user wants them.
 
 Explicit so future contributors don't quietly pick defaults:
 
-1. **Hidden-fields visibility.** Current sketch has `hiddenFields` as
+1. **Hidden-fields visibility.** Current sketch has `x-hiddenFields` as
    a public array (count + tier hint visible to all workspace
-   members). Alternative: omit `hiddenFields` from `schema.json`
+   members). Alternative: omit `x-hiddenFields` from `schema.json`
    entirely; distribute hidden-field IDs only via the encrypted
    store. More aggressive privacy; harder to reason about
    structurally.
-2. **Hidden-field stripping on export.** When a `.table/` is exported
-   from a workspace, do we strip `hiddenFields` from the exported
+2. **Hidden-field stripping on export.** When a `.table` is exported
+   from a workspace, do we strip `x-hiddenFields` from the exported
    `schema.json` (clean — current preference) or keep markers as
    "dead references" (honest historical record). Format choice;
    minor UX.
