@@ -164,7 +164,7 @@ The URI scheme is **format-agnostic**. Each format spec defines:
 
 ### One constraint: locators are a single path segment
 
-A locator occupies one path segment (between `/` separators). If a format wants nested addressing, it encodes the nesting inside a single segment using its own conventions — e.g. `slide12-elementX`, `table=deals&row=dl-1&field=amount` (a `.table` cell), `p5-200,400` (page+position).
+A locator occupies one path segment (between `/` separators). If a format wants nested addressing, it encodes the nesting inside a single segment using its own conventions — e.g. `slide12-elementX`, `table=deals&row=jddy8s…&field=yenis3…` (a `.table` cell), `p5-200,400` (page+position).
 
 The URI scheme never spans a locator across multiple path segments. Keeps parsing simple and the reserved-keyword check unambiguous.
 
@@ -217,31 +217,33 @@ as one path segment: `key=value` pairs joined by `&`.
 
 - `table=<name>`: a table in the bundle, by its name (the directory
   under `tables/`). It may be left out when the bundle holds one table.
-- `row=<id>`: a row, by its system `id`. Writers mint it, nobody edits
-  it, and it's unique within its table, not the bundle, so a bundle of
-  several tables names the table too.
-- `field=<name>`: a column, by its field's `name`. A name never
-  changes: renaming a field changes its `title` (SPEC section 2,
-  "Schema evolution"), so the locator survives renames and reordering.
-- `view=<id>`: a view.
+- `row=<id>`: a row, by its system `id`. Writers mint it (26 z-base-32
+  characters), nobody edits it, and it's unique within its table, not the
+  bundle, so a bundle of several tables names the table too.
+- `field=<id>`: a column, by its field's `id` (13 z-base-32 characters,
+  never shown, never changed; SPEC section 2, "A field's id"). A field's
+  `name` works too, and reads better by hand, but the id is what a link
+  should carry: it survives anything done to the field.
+- `view=<id>`: a view, by its id (26 z-base-32 characters).
 
 A row and a field together are a cell. Values are percent-encoded
 (`encodeURIComponent`): an `id` may be any non-empty string, though the
-ids writers mint are lowercase base36.
+ids writers mint are z-base-32, which needs no encoding.
 
 ```
-workspace://v1/z6Mk…/document/4Hp8…/table=deals&row=dl-1                ← row
-workspace://v1/z6Mk…/document/4Hp8…/table=deals&field=amount            ← column
-workspace://v1/z6Mk…/document/4Hp8…/table=deals&row=dl-1&field=amount   ← cell
-workspace://v1/z6Mk…/document/4Hp8…/table=deals&view=pipeline           ← view
-workspace://v1/z6Mk…/document/4Hp8…/row=p1                              ← a one-table bundle
+workspace://v1/z6Mk…/document/4Hp8…/table=deals&row=jddy8scd44w9r1kqur3j4meoii                      ← row
+workspace://v1/z6Mk…/document/4Hp8…/table=deals&field=yenis3phpcrn1                                 ← column
+workspace://v1/z6Mk…/document/4Hp8…/table=deals&row=jddy8scd44w9r1kqur3j4meoii&field=yenis3phpcrn1  ← cell
+workspace://v1/z6Mk…/document/4Hp8…/table=deals&view=oxycwiuri87bqu1s89cpt836n1                     ← view
+workspace://v1/z6Mk…/document/4Hp8…/row=ik9jdn1jye4ajepnxiimo3xc6a                                  ← a one-table bundle
 ```
 
-**Names are visible.** A link names its table and field, as the
-schema already does to every member. The values aren't in it. A field
-whose name is itself sensitive would need an opaque ID instead, from
-the hidden schema entries [`workspace-format.md`](./workspace-format.md)
-proposes (planned, not in the `.table` spec).
+**What a link shows.** A link names its table, as the schema does to
+every member, and by ids its row, field and view: no values, and no
+field's name when it uses the field's id. That is what lets a field
+whose name is itself sensitive be linked to without saying it (the
+hidden schema entries [`workspace-format.md`](./workspace-format.md)
+proposes: planned, not in the `.table` spec).
 
 ### CSV — A1 notation
 
@@ -465,11 +467,11 @@ workspace://v1/z6MkpKpf…/document/4Hp8KqRtFmYxNbCvDgHpKr/100,200-400,300     �
 ### Table cell
 
 ```
-workspace://v1/z6MkpKpf…/document/4Hp8KqRtFmYxNbCvDgHpKr/table=deals&row=dl-1&field=amount
+workspace://v1/z6MkpKpf…/document/4Hp8KqRtFmYxNbCvDgHpKr/table=deals&row=jddy8scd44w9r1kqur3j4meoii&field=yenis3phpcrn1
 ```
 
-Table `deals`, row `dl-1`, field `amount`: the `.table` format's own
-address (see "Tables" above).
+Table `deals`, a row and a field by their ids: the `.table` format's
+own address (see "Tables" above).
 
 ### CSV cell
 
