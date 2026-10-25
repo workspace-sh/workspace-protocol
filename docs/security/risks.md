@@ -241,7 +241,7 @@ library API are easier than the semantic shift. We absorb this when
 the swap becomes unavoidable, not before.
 
 Trigger conditions for revisiting (already captured in
-[issue #19](https://github.com/workspace-sh/workspace-p2p-spike/issues/19)):
+[issue #19](https://github.com/workspace-sh/workspace-protocol/issues/19)):
 
 - iso-ucan ships a stable revocation module
 - A production integration with a non-ucanto UCAN service becomes a
@@ -789,9 +789,9 @@ Captured here to avoid losing the thread:
   format
 - [`lighthouse.md`](../lighthouse/README.md) — the always-on-node concept
   that closes the mobile and casual-user availability gaps
-- [Issue #19](https://github.com/workspace-sh/workspace-p2p-spike/issues/19)
+- [Issue #19](https://github.com/workspace-sh/workspace-protocol/issues/19)
   — UCAN library choice ADR
-- [Issue #17](https://github.com/workspace-sh/workspace-p2p-spike/issues/17)
+- [Issue #17](https://github.com/workspace-sh/workspace-protocol/issues/17)
   — identity recovery / device linking / key rotation
 
 ---

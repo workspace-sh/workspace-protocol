@@ -6,26 +6,26 @@ already ship in this repo, not as abstractions.
 
 **Status:** design. Every primitive referenced is implemented; what
 remains is orchestration + the pairing-channel and recovery UX. Tracked
-in [#17](https://github.com/workspace-sh/workspace-p2p-spike/issues/17).
+in [#17](https://github.com/workspace-sh/workspace-protocol/issues/17).
 
 The durability requirement below is not design — it is a rule learned
 from an implementation that broke, and it is normative
-([#38](https://github.com/workspace-sh/workspace-p2p-spike/issues/38)).
+([#38](https://github.com/workspace-sh/workspace-protocol/issues/38)).
 
 Primitives in play:
 
 - **Wrapped keys** — X25519 seal to a recipient's key
-  ([#7](https://github.com/workspace-sh/workspace-p2p-spike/issues/7),
+  ([#7](https://github.com/workspace-sh/workspace-protocol/issues/7),
   `@workspace.sh/p2p-runtime` `wrap`/`unwrap`).
 - **UCAN delegation** — root → device, scoped + expiring
-  ([#8](https://github.com/workspace-sh/workspace-p2p-spike/issues/8),
+  ([#8](https://github.com/workspace-sh/workspace-protocol/issues/8),
   `@workspace.sh/ucan-boundary`).
 - **Key delivery log** — the live carrier; one block per delivery,
   scanned from a cursor
-  ([#9](https://github.com/workspace-sh/workspace-p2p-spike/issues/9),
+  ([#9](https://github.com/workspace-sh/workspace-protocol/issues/9),
   `publishDelivery`/`scanDeliveries`).
 - **Root attestation** — sign over workspace identity
-  ([#16](https://github.com/workspace-sh/workspace-p2p-spike/issues/16)).
+  ([#16](https://github.com/workspace-sh/workspace-protocol/issues/16)).
 
 A device's identity is an ed25519 keypair whose public half is its
 `did:key`; the private half never leaves the device.
@@ -165,7 +165,7 @@ encrypted under it **forever** — rotation cannot retroactively un-read
 data. Rotation only protects *future* content (written under the new
 key). UCAN **expiry** is the blunt instrument actually available for
 "revocation"; combined with the topic-layer gate
-([#10](https://github.com/workspace-sh/workspace-p2p-spike/issues/10),
+([#10](https://github.com/workspace-sh/workspace-protocol/issues/10),
 which stops a non-member *connecting*), it bounds a departed device's
 *future* access, not its access to history it already replicated. The
 design must state this plainly rather than implying rotation excludes a
