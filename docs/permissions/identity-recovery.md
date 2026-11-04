@@ -191,6 +191,8 @@ device from past content.
 
 ## Cross-references
 
+- [`key-storage.md`](./key-storage.md) — where the device key, admin
+  keys and store keys live on each platform, and how they are exported
 - [`permissions-model.md`](./permissions-model.md) — the two carriers,
   revocation levers, the supersession block lives on the key delivery log
 - [`threat-model.md`](../security/threat-model.md) — what revocation does and
