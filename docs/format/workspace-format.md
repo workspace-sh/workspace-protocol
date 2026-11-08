@@ -493,13 +493,13 @@ specific role.
 
 ```json
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "workspaceId": "z6MkpKpf2nFiC5h9qDPgJrkBbYBaThkAEcVCgGuBHkXqK4Vc",
   "createdAt": 1717200000,
   "rootDid": "did:key:z6MkpKpf2nFiC5h9qDPgJrkBbYBaThkAEcVCgGuBHkXqK4Vc",
   "topicId": "af8757dc370b001d97d81bda285b80b147e6ca845967ce387e42ec54425209b9",
   "logs": {
-    "data": "hex-encoded-hypercore-key",
+    "data": "hex-encoded-autobase-key",
     "keyDelivery": "hex-encoded-hypercore-key",
     "blobs": "hex-encoded-hypercore-key"
   }
@@ -518,11 +518,34 @@ alone, without the multicodec prefix), the same topic
 the topic the manifest names; since the attestation signs it, only
 the root can name a different one.
 
-`logs` holds the Hypercore keys of the data log, the key delivery
-log, and the blob log.
+`logs` holds the keys of the data log, the key delivery log, and the
+blob log.
 
-`formatVersion` is 2. A reader refuses a manifest of any other
-version and says which version it found.
+**The data log is multi-writer** (format 3). `logs.data` is the key of
+an Autobase whose first writer, and only indexer, is the creating
+device: the base's key is that device's input core. Every member
+writes, as set out in [ADR 0002](../adr/0002-autobase-merge-strategy.md):
+
+- The whole base is encrypted with `K0_org` (Autobase's encryption
+  key), so its blocks are not sealed one by one.
+- Who writes is decided in `apply`, the same on every device. The
+  admin's input core appends `member` (on admitting a device) and
+  `remove` (on revoking one). A member that holds `K0_org` appends an
+  optimistic `join`, signed by its device key over the base key, its
+  own input core key and its blob log key. `apply` makes it a
+  non-indexer writer when it is a member, not removed, and the
+  signature verifies. Revoking removes its writer keys.
+- Each writer has its own blob log; a blob reference names the log
+  when it isn't the manifest's.
+- A put or delete records the version of the document its device saw.
+  The fold keeps the later of two versions written without seeing each
+  other at the path, and the other beside it as
+  `name (conflict YYYY-MM-DD HH.MM).ext` (UTC). A delete of a replaced
+  version loses to the edit.
+
+`formatVersion` is 3. A reader refuses a manifest of any other
+version and says which version it found. Format 2 was single-writer;
+it is not migrated.
 
 ### `attestation.json`
 
@@ -547,7 +570,7 @@ Format mirrors the `SignedAttestation` struct in
   "payload": {
     "workspaceId": "z6MkpKpf2nFiC5h9qDPgJrkBbYBaThkAEcVCgGuBHkXqK4Vc",
     "createdAt": 1717200000,
-    "formatVersion": 2,
+    "formatVersion": 3,
     "topicId": "af8757dc370b001d97d81bda285b80b147e6ca845967ce387e42ec54425209b9",
     "logs": { "data": "…", "keyDelivery": "…", "blobs": "…" }
   },
@@ -705,6 +728,9 @@ store/
         └── …                ← one file per replication message, in order
 ```
 
+- A format 3 folder holds one such directory per writer's input core of
+  the data base (enough to rebuild its view with no other party), plus
+  the key delivery log and the blob logs.
 - Each file holds one message of Hypercore's own replication protocol
   (`wire.data`): block **ciphertext** under the relevant tier key,
   the Merkle proof for it, and — in the first message of a log — the
