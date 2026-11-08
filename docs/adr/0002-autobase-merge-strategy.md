@@ -1,6 +1,6 @@
 # ADR 0002 — Multi-writer merge: per-format LWW over Autobase
 
-**Status:** Accepted (design; implementation tracked in [#11](https://github.com/workspace-sh/workspace-protocol/issues/11) / [#12](https://github.com/workspace-sh/workspace-protocol/issues/12)) · **Date:** 2026-06
+**Status:** Accepted; implemented in Workspace with one hook for every format, whole-document with conflict copies ([workspace#841](https://github.com/workspace-sh/workspace/pull/841)–[#844](https://github.com/workspace-sh/workspace/pull/844)). Per-format hooks remain [#12](https://github.com/workspace-sh/workspace-protocol/issues/12) · **Date:** 2026-06
 
 ## Context
 
