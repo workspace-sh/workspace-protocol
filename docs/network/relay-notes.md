@@ -24,4 +24,16 @@ Checked against HyperDHT 6.33.2, Hyperswarm 4.17.0 and blind-relay 1.6.1.
 - Relaying is opt-in through `relayThrough`. Hyperswarm forces a relay after `HOLEPUNCH_ABORTED`, `HOLEPUNCH_DOUBLE_RANDOMIZED_NATS` or `REMOTE_NOT_HOLEPUNCHABLE`.
 - A relayed connection keeps trying to hole-punch in the background and moves to the direct path if one succeeds. Reconnects try direct first.
 - Pear's sidecar sets `relayThrough` only when forced or when its own node is randomized, and ships with no relay key unless one is given.
-- The Pear docs say a relay must be a third machine both peers
+- The Pear docs say a relay must be a third machine both peers can reach. Holepunch estimates about 95% of connections are direct and 5% relayed.
+
+## 4. Findings
+
+- No serverless platform offers inbound UDP, so the stock blind relay is VPS/Fly only.
+- Serverless path: our own WebSocket pair pipe. Cloudflare Durable Objects with hibernation cost about $5/month at 100k sessions. Fly works (wakes on HTTP/TCP). Azure Web PubSub works but has a per-unit daily fee. AWS API Gateway and Cloud Run are poor fits. DigitalOcean is VPS only.
+- @hyperswarm/dht-relay was archived Nov 2025 with no successor. Open community PRs (2026) fix it for Hyperswarm >= 4.11. Proposed: ask Holepunch to unarchive or hand it over, otherwise a shared copy with Ghostly's author; add a "pair mode" alongside its DHT mode.
+- Not forking: relayThrough plus NoiseSecretStream over any duplex plus corestore.replicate. bare-ws exists for Bare.
+
+
+## 5. Other apps on Hypercore
+
+Keet, PearPass, QVAC (Tether/Holepunch); CoMapeo (Awana Digital); Ghostly; Varanda; Holesail; datrs (Rust).
