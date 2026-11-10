@@ -36,4 +36,13 @@ Checked against HyperDHT 6.33.2, Hyperswarm 4.17.0 and blind-relay 1.6.1.
 
 ## 5. Other apps on Hypercore
 
-Keet, PearPass, QVAC (Tether/Holepunch); CoMapeo (Awana Digital); Ghostly; Varanda; Holesail; datrs (Rust).
+| App | What it does | Stack it uses |
+|---|---|---|
+| Keet | Chat and video calls, by Holepunch/Tether | Pear, Bare, Hypercore, Autobase, Hyperswarm, blind peers and relays |
+| PearPass | Password manager that syncs between devices | Pear, Hypercore, Hyperswarm |
+| QVAC | Local AI apps (health assistant, workbench) | Pear, Bare, Hyperswarm |
+| CoMapeo | Offline mapping and monitoring for land defenders, by Awana Digital | Hypercore 10, Corestore, Hyperdrive, Hyperswarm, Noise secret stream; finds peers on the local network itself and can also sync to a server over WebSocket |
+| Ghostly | Encrypted messenger with a wallet | HyperDHT, plus its own self-hosted HyperDHT relay for its web app |
+| Varanda | Brazilian social network | Hyperswarm, HyperDHT relay for its web client |
+| Holesail | Shares a local TCP or UDP port with another machine, no port forwarding | HyperDHT |
+| datrs | Hypercore and its protocol reimplemented in Rust | Its own implementation |
