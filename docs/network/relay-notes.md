@@ -46,3 +46,5 @@ Checked against HyperDHT 6.33.2, Hyperswarm 4.17.0 and blind-relay 1.6.1.
 | Varanda | Brazilian social network | Hyperswarm, HyperDHT relay for its web client |
 | Holesail | Shares a local TCP or UDP port with another machine, no port forwarding | HyperDHT |
 | datrs | Hypercore and its protocol reimplemented in Rust | Its own implementation |
+
+How each one connects, with links: [relay-apps.md](./relay-apps.md).
