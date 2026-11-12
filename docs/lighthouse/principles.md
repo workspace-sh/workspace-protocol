@@ -1,6 +1,6 @@
 # Principles
 
-Agreed with Leslie, 20 Oct 2026. These bound the design below; how they
+Agreed 20 Oct 2026. These bound the design below; how they
 are built is still open.
 
 1. **Just another peer.** A Lighthouse has no powers a member's device

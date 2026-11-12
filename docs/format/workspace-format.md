@@ -371,7 +371,7 @@ changes underneath them.
 
   - **Conflicted-copy duplicates.** Real. A sync engine that sees
     two versions writes a second file beside the first:
-    `000000 (Leslie's conflicted copy 2026-08-19).bin`. Store
+    `000000 (Sam's conflicted copy 2026-08-19).bin`. Store
     filenames are strictly sequence-numbered, so the reader's
     filename pattern must reject anything that is not exactly a
     sequence number — a lenient match would splice a duplicate
