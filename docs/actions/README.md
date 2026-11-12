@@ -89,6 +89,7 @@ not in any one document.
 - [`in-files.md`](./in-files.md): where an action lives in markdown, `.table` and JSON Canvas
 - [`credentials.md`](./credentials.md): connections and credentials, always-on nodes, trust
 - [`prior-art.md`](./prior-art.md): Coda, Notion, Airtable, Excel, Sheets and others, compared
-- [`status.md`](./status.md): what the stack has today, what's open, the first step
+- [`status.md`](./status.md): what the stack has today, what's decided and open, the next step
+- [`examples.md`](./examples.md): three actions written out, and how each reads offline
 
 Up: [All docs](../README.md)
