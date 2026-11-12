@@ -27,7 +27,7 @@ node, delegated secrets, and the web runtime.
 
 ## Decided
 
-Agreed with Leslie, 12 Nov 2026:
+Decided 12 Nov 2026:
 
 - **Runtime:** the Rust EDN engine already in every app (table-file-format
   `edn/`) becomes the action runtime, with step counting and a heap cap.
