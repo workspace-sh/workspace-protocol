@@ -71,9 +71,29 @@ in.
 - **Not custodial.** A Lighthouse holds bytes, not access. Tier-gated
   content is encrypted at rest; the Lighthouse stores it but can't
   read it unless it was issued the same keys as a regular member.
-- **Not a relay.** Relays forward topic traffic without holding state.
-  Lighthouses hold state — they're full peers. Both can coexist; they
-  solve different problems.
+- **Not only a relay.** A relay forwards encrypted traffic between two
+  devices that can't reach each other, and holds nothing. A Lighthouse
+  may offer a relay as well, but its main job is holding the workspace.
+  The one exception, for now, is a serverless Lighthouse (below).
+
+---
+
+## Two kinds: on a server, or serverless
+
+Exploration, 9 Nov 2026; see [relay notes](../network/relay-notes.md).
+
+| | On a server (VPS, home server) | Serverless (Cloudflare preferred) |
+| --- | --- | --- |
+| Holds the workspace | Yes, a full peer | Not yet (open) |
+| Relays | Holepunch's blind relay over UDP, and a WebSocket relay on port 443 | A WebSocket relay on port 443 only |
+| Runs | All the time | Only while two devices are connected through it |
+| Costs | A server | Per message; about $5 a month at 100k relayed sessions |
+
+Either kind relays only when hole punching fails (about 5% of
+connections), and the relay can't read what it forwards: devices
+encrypt end to end and check each other's keys. A relayed connection
+keeps trying to punch through, and moves to a direct one when it can.
+Both use Holepunch's modules as published, with no forks.
 
 ---
 
@@ -82,6 +102,7 @@ in.
 - [`principles.md`](./principles.md): what a Lighthouse must and mustn't be (agreed 20 Oct 2026)
 - [`deployment.md`](./deployment.md): who runs one, and where
 - [`prior-art.md`](./prior-art.md): Keet's blind peers and relays
+- [Relay notes](../network/relay-notes.md): the relay research behind the two kinds
 
 ## Cross-references
 
