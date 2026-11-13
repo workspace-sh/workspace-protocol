@@ -74,10 +74,6 @@ in.
 - **Not a relay.** Relays forward topic traffic without holding state.
   Lighthouses hold state — they're full peers. Both can coexist; they
   solve different problems.
-- **Not an Anchor.** "Anchor" is reserved separately for a future
-  on-chain bootstrap concept (immutable discovery metadata in
-  perpetuity). Lighthouses are mutable, opt-in, operational. Anchors
-  would be permanent, fixed, foundational.
 
 ---
 
