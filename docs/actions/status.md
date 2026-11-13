@@ -25,30 +25,37 @@ From reading the code, 17 Oct 2026:
 Blockers, in short: a sandbox, multi-writer, invocations, the always-on
 node, delegated secrets, and the web runtime.
 
+## Decided
+
+Decided 12 Nov 2026:
+
+- **Runtime:** the Rust EDN engine already in every app (table-file-format
+  `edn/`) becomes the action runtime, with step counting and a heap cap.
+  Not QuickJS or wasmi.
+- **Effects:** an action only asks. The app performs every fetch and every
+  write, so the sandbox has no network or file access of its own.
+- **Syntax:** stored as EDN; shown as EDN and a formula-like surface first,
+  a TypeScript-like one later.
+- **Run records:** an action that belongs to a document keeps its value as
+  an ordinary, undoable edit in that document's history; a workspace's own
+  actions record their runs in the workspace's log.
+
 ## Open
 
-- The surface syntax or syntaxes.
-- Placement in each file type.
-- The sandbox, and where it lives.
-- Whether run records go in the log of the document or of the workspace.
+- Placement in `.table` (`x-actions` in `schema.json`, kept values as
+  ordinary cells), to check against the `.table` spec.
+- Placement in Markdown (`<!--action … -->`, kept values between
+  `<!--[kept …]-->` and `<!--[/kept]-->`).
+- Placement in JSON Canvas (`x-action` on nodes and edges), to check
+  against what Obsidian keeps.
 - How a workspace's own actions are stored, and who may add one.
 - An always-on node's default: seed only, or also run.
 - "Broaden the scope to Arabic": raised, not yet understood.
 
 ## First step
 
-Format only, no runtime. Write three actions as EDN with one surface
-syntax, show each converting both ways, and show how each reads when
-offline:
-
-1. markdown: a place's coordinates (Nominatim);
-2. `.table`: an Open Library cover for each book;
-3. canvas: an edge carrying a value from one node to another.
-
-Read-only public sources to try them on: Open-Meteo, Nominatim (one
-request a second, and identify the app), Open Library, Wikipedia and
-Wikidata, Frankfurter, REST Countries, Nager.Date, USGS earthquakes,
-OpenAlex, Crossref, arXiv, MusicBrainz, Open Food Facts, GitHub REST,
-Hacker News.
+Done: [three worked examples](./examples.md). Next, a minimal
+`workspace-action-v1` evaluator in the EDN engine, with a step budget, that
+runs examples 1 and 3 with their fetches answered by the test.
 
 Up: [Workspace actions](./README.md) · [All docs](../README.md)
