@@ -75,10 +75,6 @@ in.
   devices that can't reach each other, and holds nothing. A Lighthouse
   may offer a relay as well, but its main job is holding the workspace.
   The one exception, for now, is a serverless Lighthouse (below).
-- **Not an Anchor.** "Anchor" is reserved separately for a future
-  on-chain bootstrap concept (immutable discovery metadata in
-  perpetuity). Lighthouses are mutable, opt-in, operational. Anchors
-  would be permanent, fixed, foundational.
 
 ---
 
