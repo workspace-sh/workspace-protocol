@@ -159,6 +159,14 @@ export function relaySuite(name: string, start: () => Promise<{ url: string; clo
       await b.closed;
     });
 
+    it('counts empty frames against the meeting limit', async () => {
+      const [a, b] = await pair(base);
+      // At 64 bytes each, 256 KiB allows 4096 empty frames.
+      for (let i = 0; i < 5000; i++) a.ws.send(new Uint8Array(0));
+      assert.equal((await within(a.closed, CLOSE_WAIT_MS, 'sender closed')).code, CLOSE.LIMIT);
+      await b.closed;
+    });
+
     it("closes when the meeting's bytes go over the limit", async () => {
       const [a, b] = await pair(base);
       const chunk = new Uint8Array(TEST_LIMITS.maxFrameBytes);

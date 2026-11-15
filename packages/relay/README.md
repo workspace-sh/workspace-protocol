@@ -46,8 +46,14 @@ Limits, set by environment variable (Cloudflare: `[vars]` or `--var`):
 | `RELAY_MAX_MEETING_BYTES` | 512 MiB |
 | `RELAY_MAX_MEETING_MS` | 2 hours |
 
+Each frame counts as at least 64 bytes against the meeting's limit, so a
+flood of empty frames ends a meeting like any other traffic.
+
 The plain process also takes `maxMeetings` (default 10,000; more are refused
-with 503) and pauses a sender while the other device's queue is over 4 MiB.
+with 503) and `maxPerAddress` (16 connections from one address at once; more
+are refused with 429), and pauses a sender while the other device's queue is
+over 4 MiB. Behind a reverse proxy, `addressHeader` names the header that
+carries the client's address; set it only if the proxy overwrites that header.
 
 ## What the relay can and cannot see
 
@@ -70,9 +76,11 @@ does not trust. That holds only if devices do their part:
 
 ## Known gaps
 
-- Anyone can open meetings. There is no authentication, no per-device or
-  per-address cap, and no Origin check, so a public deployment can be used
-  as a general-purpose pipe and its cost driven up by strangers.
+- Anyone can open meetings. There is no authentication and no Origin check,
+  so a public deployment can be used as a general-purpose pipe. The
+  Cloudflare adapter has no per-address cap yet, so strangers can drive its
+  cost up; on the free plan that stops the service rather than adding to the
+  bill.
 - The Cloudflare adapter has no backpressure: a fast sender towards a slow
   device queues in the Durable Object's memory until the object is reset.
 - Local workerd delivers a server's close frame at once but closes the TCP

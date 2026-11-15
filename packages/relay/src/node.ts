@@ -27,6 +27,14 @@ export interface RelayServerOptions {
   maxMeetings?: number;
   /** Bytes queued towards a slow device before the sender is paused. */
   highWaterBytes?: number;
+  /** Connections open at once from one address; more are refused with 429. */
+  maxPerAddress?: number;
+  /**
+   * Behind a reverse proxy, the header that carries the client's address
+   * (e.g. 'x-forwarded-for'). Only set this when the proxy overwrites it;
+   * otherwise a client can name any address it likes.
+   */
+  addressHeader?: string;
 }
 
 export interface RelayServer {
@@ -47,7 +55,17 @@ export async function startRelayServer(opts: RelayServerOptions = {}): Promise<R
   const limits: Limits = { ...DEFAULT_LIMITS, ...opts.limits };
   const maxMeetings = opts.maxMeetings ?? 10_000;
   const highWater = opts.highWaterBytes ?? 4 * 1024 * 1024;
+  const maxPerAddress = opts.maxPerAddress ?? 16;
+  const perAddress = new Map<string, number>();
   const meetings = new Map<string, Member[]>();
+  const addressOf = (req: IncomingMessage): string => {
+    if (opts.addressHeader) {
+      const raw = req.headers[opts.addressHeader.toLowerCase()];
+      const first = (Array.isArray(raw) ? raw[0] : raw)?.split(',')[0]?.trim();
+      if (first) return first;
+    }
+    return req.socket.remoteAddress ?? 'unknown';
+  };
   // ws's own cap is a memory guard only; core's limit decides, so the close code is CLOSE.LIMIT.
   const wss = new WebSocketServer({ noServer: true, maxPayload: limits.maxFrameBytes * 2 + 1024 });
 
@@ -89,6 +107,8 @@ export async function startRelayServer(opts: RelayServerOptions = {}): Promise<R
     const path = new URL(req.url ?? '/', 'http://relay').pathname;
     const key = meetingKeyFrom(path);
     if (!key) return refuse(socket, 404, 'Not Found');
+    const address = addressOf(req);
+    if ((perAddress.get(address) ?? 0) >= maxPerAddress) return refuse(socket, 429, 'Too Many Requests');
     const present = meetings.get(key)?.length ?? 0;
     if (present === 0 && meetings.size >= maxMeetings) return refuse(socket, 503, 'Service Unavailable');
     const verdict = admit(present);
@@ -99,6 +119,13 @@ export async function startRelayServer(opts: RelayServerOptions = {}): Promise<R
       const list = meetings.get(key) ?? [];
       const again = admit(list.length);
       if (!again.ok) return ws.close(CLOSE.PROTOCOL, again.reason);
+
+      perAddress.set(address, (perAddress.get(address) ?? 0) + 1);
+      ws.once('close', () => {
+        const n = (perAddress.get(address) ?? 1) - 1;
+        if (n <= 0) perAddress.delete(address);
+        else perAddress.set(address, n);
+      });
 
       const now = Date.now();
       const me: Member = { ws, side: newSide(now), timer: null };
