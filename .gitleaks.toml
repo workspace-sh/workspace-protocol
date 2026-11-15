@@ -1,0 +1,49 @@
+# gitleaks's default rules, plus Workspace's own bearer secrets.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "workspace-invite-link"
+description = "A workspace:// invite link carries a bearer secret after #invite="
+regex = '''workspace://v1/[A-Za-z0-9]+#invite=[a-z0-9]{20,}'''
+keywords = ["#invite="]
+
+[[rules]]
+id = "cloudflare-api-token-assignment"
+description = "A Cloudflare API token set in a file"
+regex = '''(?i)CLOUDFLARE_API_TOKEN\s*[=:]\s*["']?[A-Za-z0-9_\-]{30,}'''
+keywords = ["cloudflare_api_token"]
+
+# Personal information. Public repositories carry no one's address, phone
+# number or home directory; examples use example.com and placeholder names.
+
+[[rules]]
+id = "pii-email-address"
+description = "An email address"
+regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'''
+keywords = ["@"]
+[[rules.allowlists]]
+regexes = ['''(?i)noreply''', '''(?i)@example\.(com|org|net)''', '''@users\.noreply\.github\.com''']
+paths = ['''(^|/)package-lock\.json$''', '''(^|/)node_modules/''']
+
+[[rules]]
+id = "pii-phone-number"
+description = "An international phone number"
+regex = '''\+[1-9][0-9]{0,2}[ .-]?[0-9]{2,4}[ .-]?[0-9]{3,4}[ .-]?[0-9]{3,4}\b'''
+keywords = ["+"]
+[[rules.allowlists]]
+paths = ['''(^|/)package-lock\.json$''']
+
+[[rules]]
+id = "pii-home-directory"
+description = "A path inside someone's home directory"
+regex = '''/(home|Users)/[a-z][a-z0-9_.-]+/'''
+keywords = ["/home/", "/users/"]
+[[rules.allowlists]]
+regexes = ['''/(home|Users)/(user|runner|me|you|name|example)/''']
+
+[[rules]]
+id = "claude-session-url"
+description = "A Claude session link"
+regex = '''claude\.ai/code/session_[A-Za-z0-9]+'''
+keywords = ["claude.ai/code/session_"]

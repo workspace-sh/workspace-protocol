@@ -1,0 +1,20 @@
+# The Cloudflare adapter. No account id or token lives here: wrangler reads
+# CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN from the environment, or
+# from `wrangler login`.
+name = "workspace-relay"
+main = "src/cloudflare.ts"
+compatibility_date = "2026-11-01"
+
+[[durable_objects.bindings]]
+name = "MEETINGS"
+class_name = "Meeting"
+
+# The free plan allows SQLite-backed Durable Objects only.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Meeting"]
+
+# No request logs: the relay keeps no record of who met whom. Cloudflare's
+# own analytics still see request metadata.
+[observability]
+enabled = false
