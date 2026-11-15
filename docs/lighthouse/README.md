@@ -93,6 +93,10 @@ Exploration, 9 Nov 2026; see [relay notes](../network/relay-notes.md).
 | Runs | All the time | Only while two devices are connected through it |
 | Costs | A server | Per message; about $5 a month at 100k relayed sessions |
 
+The relay is its own library, usable before any Lighthouse exists, and
+Workspace's own relays run serverless (decided 15 Nov 2026; see the
+[relay notes](../network/relay-notes.md)).
+
 Either kind relays only when hole punching fails (about 5% of
 connections), and the relay can't read what it forwards: devices
 encrypt end to end and check each other's keys. A relayed connection
