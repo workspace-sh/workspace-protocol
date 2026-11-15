@@ -96,6 +96,12 @@ export function newSide(now: number): Side {
   return { joinedAt: now, pairedAt: null, bytes: 0 };
 }
 
+/**
+ * Each frame is counted as at least this many bytes, so a flood of tiny or
+ * empty frames runs into the meeting's byte limit like any other traffic.
+ */
+export const MIN_FRAME_COST = 64;
+
 export type FrameVerdict =
   | { forward: true; side: Side }
   | { forward: false; code: number; reason: string };
@@ -114,10 +120,11 @@ export function onFrame(
   if (side.pairedAt === null) return { forward: false, code: CLOSE.PROTOCOL, reason: 'not paired yet' };
   if (!frame.binary) return { forward: false, code: CLOSE.PROTOCOL, reason: 'binary frames only' };
   if (frame.size > limits.maxFrameBytes) return { forward: false, code: CLOSE.LIMIT, reason: 'frame too large' };
-  if (meetingBytes + frame.size > limits.maxMeetingBytes) {
+  const cost = Math.max(frame.size, MIN_FRAME_COST);
+  if (meetingBytes + cost > limits.maxMeetingBytes) {
     return { forward: false, code: CLOSE.LIMIT, reason: 'meeting byte limit' };
   }
-  return { forward: true, side: { ...side, bytes: side.bytes + frame.size } };
+  return { forward: true, side: { ...side, bytes: side.bytes + cost } };
 }
 
 export type Deadline = { at: number; code: number; reason: string };

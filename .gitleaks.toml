@@ -4,9 +4,9 @@ useDefault = true
 
 [[rules]]
 id = "workspace-invite-link"
-description = "A workspace:// invite link carries a bearer secret after #invite="
-regex = '''workspace://v1/[A-Za-z0-9]+#invite=[a-z0-9]{20,}'''
-keywords = ["#invite="]
+description = "An invite secret (#invite=..., also URL-encoded), a bearer secret"
+regex = '''(?i)(#|%23)invite(=|%3D)[a-z0-9]{20,}'''
+keywords = ["invite"]
 
 [[rules]]
 id = "cloudflare-api-token-assignment"
@@ -23,7 +23,13 @@ description = "An email address"
 regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'''
 keywords = ["@"]
 [[rules.allowlists]]
-regexes = ['''(?i)noreply''', '''(?i)@example\.(com|org|net)''', '''@users\.noreply\.github\.com''']
+regexes = [
+  '''(?i)^noreply@''',
+  '''(?i)@noreply\.''',
+  '''(?i)@users\.noreply\.github\.com$''',
+  '''(?i)@example\.(com|org|net)$''',
+  '''(?i)^git@(github|gitlab)\.com$''',
+]
 paths = ['''(^|/)package-lock\.json$''', '''(^|/)node_modules/''']
 
 [[rules]]
@@ -37,10 +43,10 @@ paths = ['''(^|/)package-lock\.json$''']
 [[rules]]
 id = "pii-home-directory"
 description = "A path inside someone's home directory"
-regex = '''/(home|Users)/[a-z][a-z0-9_.-]+/'''
-keywords = ["/home/", "/users/"]
+regex = '''(?i)(/(home|Users)/|[A-Z]:\\Users\\)[a-z][a-z0-9_.-]+[/\\]'''
+keywords = ["/home/", "/users/", "\\users\\"]
 [[rules.allowlists]]
-regexes = ['''/(home|Users)/(user|runner|me|you|name|example)/''']
+regexes = ['''(?i)[/\\](user|runner|me|you|name|example|username)[/\\]$''']
 
 [[rules]]
 id = "claude-session-url"

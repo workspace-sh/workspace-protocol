@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { startRelayServer } from '../src/node.ts';
 import { TEST_LIMITS, relaySuite } from './suite.ts';
 
-relaySuite('plain process', () => startRelayServer({ limits: TEST_LIMITS }));
+relaySuite('plain process', () => startRelayServer({ limits: TEST_LIMITS, maxPerAddress: 1000 }));
 
 describe('relay: plain process only', () => {
   it('refuses new meetings over maxMeetings', async () => {
@@ -24,6 +24,29 @@ describe('relay: plain process only', () => {
         c.addEventListener('close', () => r(false));
       }), true);
       a.close();
+    } finally {
+      await relay.close();
+    }
+  });
+
+  it('refuses an address over maxPerAddress, and frees its places as it leaves', async () => {
+    const relay = await startRelayServer({ limits: TEST_LIMITS, maxPerAddress: 3 });
+    const open = (k: string) =>
+      new Promise<WebSocket | null>((r) => {
+        const w = new WebSocket(`${relay.url}/v1/pair/${k.repeat(64)}`);
+        w.addEventListener('open', () => r(w));
+        w.addEventListener('close', () => r(null));
+      });
+    try {
+      const held = [await open('1'), await open('2'), await open('3')];
+      assert.ok(held.every(Boolean));
+      assert.equal(await open('4'), null);
+      held[0]!.close();
+      await new Promise((r) => held[0]!.addEventListener('close', r));
+      await new Promise((r) => setTimeout(r, 50));
+      const again = await open('5');
+      assert.ok(again);
+      for (const w of [...held, again]) w?.close();
     } finally {
       await relay.close();
     }
