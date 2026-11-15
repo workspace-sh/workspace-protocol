@@ -1,6 +1,6 @@
 # gitleaks's default rules, plus Workspace's own bearer secrets.
-# Rule regexes use only non-capturing groups: with a capturing group,
-# gitleaks treats that group as the finding and allowlists miss.
+# Rule regexes use non-capturing groups unless secretGroup is set: with a
+# capturing group, gitleaks treats that group as the finding.
 [extend]
 useDefault = true
 
@@ -45,10 +45,13 @@ paths = ['''(^|/)package-lock\.json$''']
 [[rules]]
 id = "pii-home-directory"
 description = "A path inside someone's home directory"
-regex = '''(?i)(?:/(?:home|Users)/|[A-Z]:\\Users\\)[a-z][a-z0-9_.-]+[/\\]'''
+# The finding is the username alone: gitleaks's default allowlist drops any
+# finding that is a whole /home/... or /Users/... path.
+regex = '''(?i)(?:/(?:home|Users)/|[A-Z]:\\Users\\)([a-z][a-z0-9_.-]+)[/\\]'''
+secretGroup = 1
 keywords = ["/home/", "/users/", "\\users\\"]
 [[rules.allowlists]]
-regexes = ['''(?i)[/\\](user|runner|me|you|name|example|username)[/\\]$''']
+regexes = ['''(?i)^(?:user|runner|me|you|name|example|username)$''']
 
 [[rules]]
 id = "claude-session-url"
