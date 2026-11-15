@@ -1,0 +1,35 @@
+{
+  "name": "@workspace.sh/relay",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Pre-alpha. A blind WebSocket relay that pairs two devices by meeting key, for serverless hosts and plain processes.",
+  "type": "module",
+  "exports": {
+    ".": "./src/core.ts",
+    "./node": "./src/node.ts",
+    "./cloudflare": "./src/cloudflare.ts"
+  },
+  "bin": {
+    "workspace-relay": "./src/cli.ts"
+  },
+  "scripts": {
+    "start": "node --experimental-strip-types --no-warnings src/cli.ts",
+    "dev:cloudflare": "wrangler dev",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --no-warnings --test \"tests/**/*.test.ts\""
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "dependencies": {
+    "hono": "4.13.18",
+    "ws": "8.23.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261115.1",
+    "@types/node": "^22.9.0",
+    "@types/ws": "8.18.2",
+    "wrangler": "4.162.0"
+  }
+}
