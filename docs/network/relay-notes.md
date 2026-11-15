@@ -1,6 +1,6 @@
 # Relay fallback: research notes
 
-Draft, 9 Nov 2026. An exploration, not a decision.
+Draft, 9 Nov 2026; decisions added 15 Nov 2026 (section 2).
 
 ## 1. Problem
 
@@ -16,6 +16,19 @@ Two devices sometimes cannot connect, and joins wait.
 - Use Holepunch's published options and modules without forking them.
 - A relay is a third machine both devices can reach, so the tethered case is covered whatever its cause.
 - Capped public relays come later, if funded.
+
+### Decided, 15 Nov 2026
+
+Seen that day: a phone on a mobile network could not reach a desktop behind a home router at all, so an invite could not be claimed until both were on the same network. A laptop tethered to that phone could not reach the desktop either, so it could not stand in.
+
+- **The relay is a library of its own,** used as soon as it exists. A Lighthouse includes it when Lighthouses are built; the relay does not wait for them.
+- **It is code, not a provider.** A small core pairs two connections that ask for the same meeting key and passes bytes between them. Thin adapters run it on serverless hosts (Cloudflare Workers with Durable Objects first) and as a plain process on any machine. One test suite every adapter passes.
+- **Workspace's own relays run serverless.** They exist to get people connected, and serverless keeps them cheap, or free at first.
+- **Self-hosting: we suggest a VPS** (or any always-on machine), which can also run Holepunch's blind relay over UDP.
+- **Blind, optional, replaceable.** Devices encrypt end to end inside the relayed stream, a relay holds nothing and has no authority, and a device takes a list of relays, so anyone can point at their own.
+- **Testing** uses an existing Cloudflare account on the free plan. That plan allows only SQLite-backed Durable Objects (`new_sqlite_classes` in the migration).
+
+Next: confirm the pair pipe against `relayThrough` (section 3), then the core, a plain-process adapter and the Cloudflare adapter, then a phone on a mobile network syncing with a desktop behind a home router.
 
 ## 3. What the Holepunch stack provides
 
