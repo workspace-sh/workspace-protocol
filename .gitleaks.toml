@@ -1,11 +1,13 @@
 # gitleaks's default rules, plus Workspace's own bearer secrets.
+# Rule regexes use only non-capturing groups: with a capturing group,
+# gitleaks treats that group as the finding and allowlists miss.
 [extend]
 useDefault = true
 
 [[rules]]
 id = "workspace-invite-link"
 description = "An invite secret (#invite=..., also URL-encoded), a bearer secret"
-regex = '''(?i)(#|%23)invite(=|%3D)[a-z0-9]{20,}'''
+regex = '''(?i)(?:#|%23)invite(?:=|%3D)[a-z0-9]{20,}'''
 keywords = ["invite"]
 
 [[rules]]
@@ -20,7 +22,7 @@ keywords = ["cloudflare_api_token"]
 [[rules]]
 id = "pii-email-address"
 description = "An email address"
-regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'''
+regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'''
 keywords = ["@"]
 [[rules.allowlists]]
 regexes = [
@@ -43,7 +45,7 @@ paths = ['''(^|/)package-lock\.json$''']
 [[rules]]
 id = "pii-home-directory"
 description = "A path inside someone's home directory"
-regex = '''(?i)(/(home|Users)/|[A-Z]:\\Users\\)[a-z][a-z0-9_.-]+[/\\]'''
+regex = '''(?i)(?:/(?:home|Users)/|[A-Z]:\\Users\\)[a-z][a-z0-9_.-]+[/\\]'''
 keywords = ["/home/", "/users/", "\\users\\"]
 [[rules.allowlists]]
 regexes = ['''(?i)[/\\](user|runner|me|you|name|example|username)[/\\]$''']
