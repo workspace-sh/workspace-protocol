@@ -1,7 +1,7 @@
 # @workspace.sh/relay
 
-> **Pre-alpha. Do not use this.** It has not been deployed or reviewed, and
-> its wire protocol will change without notice. It is published so the work
+> **Pre-alpha. Do not use this.** It runs only as a test deployment, has
+> not been reviewed, and its wire protocol will change without notice. It is published so the work
 > is visible, not so anyone can rely on it.
 
 A blind relay for devices that cannot reach each other directly: a phone on
@@ -84,8 +84,9 @@ does not trust. That holds only if devices do their part:
 - The Cloudflare adapter has no backpressure: a fast sender towards a slow
   device queues in the Durable Object's memory until the object is reset.
 - Local workerd delivers a server's close frame at once but closes the TCP
-  connection about ten seconds later; whether Cloudflare does the same is
-  not yet checked.
+  connection about ten seconds later, so the suite waits up to 15 s for a
+  close there. Deployed on Cloudflare (17 Nov 2026), the other device saw
+  its close 41 ms after the first device left.
 - No device uses the relay yet.
 
 ## Running
