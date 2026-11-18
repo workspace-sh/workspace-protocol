@@ -492,8 +492,9 @@ address is never shared with the wider org.
 
 ### Resolved (design + accepted contracts)
 
-- **Multi-writer** — Autobase (in production at Keet; design-validated,
-  implementation pending in #11)
+- **Multi-writer** — Autobase: built in the workspace repository
+  (`packages/workspace/src/base.ts`), with writers, roles and membership
+  records checked in `apply`
 - **Forward-only revocation** — accepted contract, two cryptographic
   levers plus the cooperative policy hint
 - **Two carriers for envelope delivery** — bundled (offline) +
