@@ -142,8 +142,12 @@ a person can see a cell is whether they can see its row and its column.
   entries).
 - **Rows** have an audience: everyone who can read the table (the default), or
   a narrower audience the table names, for example the people in a row's
-  person field ("Owner", "Assignee") or a named group. A row's values are
+  person field ("Owner", "Assignee") or a group (below). A row's values are
   sealed with its audience's key.
+- **Adding rows without reading the rest.** A table can let someone add rows
+  while seeing only the rows they added, or their group's: the new row's
+  audience is the adder's group plus whoever the table names as its internal
+  audience. They edit only rows they can see.
 - **A cell** whose row and column are both restricted is sealed with a key
   derived from both (its row audience's key and its column tier's key), so it
   opens only for someone holding both.
@@ -152,6 +156,13 @@ a person can see a cell is whether they can see its row and its column.
 - **A view's filter is not a permission.** A filter hides rows from a view and
   protects nothing; only an audience or a tier does. Apps don't present a
   filter as access control.
+
+### Groups
+
+A group is a named set of members (a team, an agency), kept as records in the
+log and changed by a Manager or above. Each group has a key, delivered to its
+members and rotated when someone leaves it. A group can be a row audience or
+be given a role at any level, as a person can.
 
 ### Tables that reference tables
 
@@ -174,6 +185,39 @@ them). Permissions hold across those links:
   interviewer sees "4 offers out", not the offers), someone who can see the
   rows stores the figure as a value, sealed at the audience it's meant for.
   How an app keeps such a value current is open (below).
+
+### Worked example: agencies and candidates
+
+A company tracks hiring in a workspace. Candidates, Roles, Interviews, Offers
+and Employees are tables related to one another. Recruitment agencies add
+candidates; each agency must see only its own candidates, and nothing of the
+company's process; a candidate who is hired becomes an employee.
+
+| Who | Given | Sees |
+|---|---|---|
+| Company recruiters (group) | Collaborator on the hiring folder | Every table, row and column in it |
+| Agency A (group) | Collaborator on `Candidates.table` only, adding rows | Agency A's candidates, in the columns not tiered: name, CV, status |
+| Agency B (group) | The same | Agency B's candidates only |
+| A candidate (optional) | Their own row, as its person field | Their row, in the columns meant for them |
+
+- **Each agency's rows** have the audience "that agency + company recruiters",
+  so Agency A's device holds no key that opens Agency B's rows.
+- **The company's process** stays out of reach twice over: Roles, Interviews,
+  Offers and Employees are files the agencies were never given (no keys), and
+  columns in Candidates such as interview notes or salary expectations are
+  tiered for recruiters only.
+- **A relation from a candidate to a Role** shows the agency a restricted link,
+  not the role's details.
+- **Hiring** adds a row in Employees that relates back to the candidate. The
+  relation lives in Employees, which no agency can read, so an agency learns
+  that its candidate was hired only if the company sets the status column it
+  can see to Hired. Nothing of the employee record reaches the agency.
+- **What an agency's device can still infer**: today a member receives all of a
+  workspace's ciphertext, so an agency could count sealed rows it can't open
+  and see when they change. Restricting which data reaches a device by what it
+  was given is open question 4 in [`join-by-link.md`](./join-by-link.md)
+  ("replication by scope"); for outside parties such as agencies it is
+  required, not optional.
 
 ### Performance
 
@@ -212,15 +256,16 @@ As of 18 Nov 2026, in the workspace repository (`packages/workspace`):
    grants, Collaborators sharing with existing members only.
 2. Folder sharing: folder keys, path checks in `apply`, path grants.
 3. File sharing: the same at file level.
-4. `.table` rows and columns.
+4. `.table` rows and columns, groups, and adding rows without reading the
+   rest.
 
 ## Open questions
 
 1. **Excluding a subfolder** from someone who holds the folder above it
    (a "deny"), and what it costs to re-key.
-2. **Groups**: whether a named group (a team) is a v1 audience, or only
-   people.
-3. **Owner transfer**: the record that names a new root key, and what
+2. **Owner transfer**: the record that names a new root key, and what
    happens to grants chained to the old one.
-4. **Published totals**: who keeps a published value current when the rows
+3. **Published totals**: who keeps a published value current when the rows
    under it change, and how a reader can tell how recent it is.
+4. **Replication by scope**: sending a device only the data it was given,
+   needed before outside parties (agencies, clients) are invited.
