@@ -171,7 +171,7 @@ a person can see a cell is whether they can see its row and its column.
 Every workspace has a table of its members, drawn from its log and kept by
 no one: it can't be edited, and it can't disagree with the log. It is listed
 in the workspace as **Members** and opens, sorts, filters and embeds like any
-table.
+table. It is not a file: nothing is written to the workspace folder for it.
 
 | Column | What it holds | Who sees it |
 |---|---|---|
@@ -182,19 +182,30 @@ table.
 | `devices` | How many devices they have in the workspace | Managers and above |
 | `joined`, `left` | When they joined, and when they left or were removed | Managers and above |
 
-- **A person field is a relation to Members.** A table names it as
-  `relation: { table: "workspace:members" }` (`.table` SPEC, relations). Its
-  values are person IDs, so a row keeps pointing at the same person across their
-  devices, renames and role changes.
+- **A person field** is a `string` field marked as holding members, with the
+  `.table` format's extension key (third-party keys take an `x-` prefix;
+  other readers ignore them and writers keep them):
+
+  ```json
+  { "name": "employee", "type": "string", "x-workspace": "member" }
+  ```
+
+  Its values are person IDs, so a row keeps pointing at the same person across
+  their devices, renames and role changes. Workspace shows each as the
+  member's name and resolves it against Members as it would a relation.
+  The format itself names no host app.
 - **"Me"** is the Members row whose `id` is the viewer's person key. A view's
   filter can say "is me" (an employee's own row, "My actions"), and a row
   audience can be "the people in this person field".
+- **People invited but not yet joined** are listed too, by their invite, so a
+  table can name someone before they accept (a new hire in Employees, a list
+  of people invited at once from a CSV). When they join, their row takes
+  their person key, and every value naming the invite is read as naming them.
 - **People who leave stay listed**, with `left` set, so the rows that name them
   still say who they were. Their access ends as described under
   [Changing access](#changing-access).
-- **Outside Workspace** the values are plain IDs: another tool reading the
-  folder sees `did:key:…` in a person column, and the `.table` rules keep it as
-  an unresolved relation, never dropped.
+- **Outside Workspace** the values are plain text: another tool reading the
+  folder sees `did:key:…` in an ordinary column, and keeps it.
 - **Nothing new leaves the workspace.** Every member's device already holds
   these IDs and names in the log; the table only shows them. A person key is
   the same in every workspace the person is in, so two workspaces that compare
