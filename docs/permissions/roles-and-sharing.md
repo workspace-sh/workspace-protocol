@@ -153,6 +153,15 @@ a person can see a cell is whether they can see its row and its column.
   opens only for someone holding both.
 - **Editing** a row or a column is checked in `apply` like any write: a person
   edits a row and a column they can see, at Collaborator or above on the table.
+- **Who edits a column** can be narrower than who reads it: a column can be
+  editable by the row's own person, or by Admins only. An employee can then
+  correct their own address and telephone, read but not change their name and
+  date of birth, and never see their salary.
+- **What a person can't see is not drawn.** Within a table, rows and columns a
+  person can't open are left out of the grid, its counts and its sorting,
+  with no placeholders: an employee opening `Employees.table` sees a table of
+  one row, in the columns they can read. Only a relation into another table
+  shows a restricted link, because there the link itself is the person's data.
 - **A view's filter is not a permission.** A filter hides rows from a view and
   protects nothing; only an audience or a tier does. Apps don't present a
   filter as access control.
@@ -163,6 +172,20 @@ A group is a named set of members (a team, an agency), kept as records in the
 log and changed by a Manager or above. Each group has a key, delivered to its
 members and rotated when someone leaves it. A group can be a row audience or
 be given a role at any level, as a person can.
+
+### Example: an employee directory
+
+```
+Novoda.workspace/
+  Operations/
+    Employees.table      rows: the employee named in the row + Admins
+                         givenName, familyName, dateOfBirth: read by the row, edited by Admins
+                         address, telephone: read and edited by the row
+                         salary: Admins only (tier)
+```
+
+An Admin sees every row and column. Each employee sees one row, their own,
+without the salary column, and can edit their address and telephone.
 
 ### Tables that reference tables
 
