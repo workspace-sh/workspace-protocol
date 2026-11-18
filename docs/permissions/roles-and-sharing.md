@@ -166,6 +166,40 @@ a person can see a cell is whether they can see its row and its column.
   protects nothing; only an audience or a tier does. Apps don't present a
   filter as access control.
 
+### Members: the workspace's own table
+
+Every workspace has a table of its members, drawn from its log and kept by
+no one: it can't be edited, and it can't disagree with the log. It is listed
+in the workspace as **Members** and opens, sorts, filters and embeds like any
+table.
+
+| Column | What it holds | Who sees it |
+|---|---|---|
+| `id` | The person's ID: their person key (`did:key`), the one their devices are bound to; a device not bound to a person is listed by its own key | Every member |
+| `name` | The name the person gave themselves | Every member |
+| `role` | Their role on the workspace | Every member |
+| `groups` | The groups they're in | Every member |
+| `devices` | How many devices they have in the workspace | Managers and above |
+| `joined`, `left` | When they joined, and when they left or were removed | Managers and above |
+
+- **A person field is a relation to Members.** A table names it as
+  `relation: { table: "workspace:members" }` (`.table` SPEC, relations). Its
+  values are person IDs, so a row keeps pointing at the same person across their
+  devices, renames and role changes.
+- **"Me"** is the Members row whose `id` is the viewer's person key. A view's
+  filter can say "is me" (an employee's own row, "My actions"), and a row
+  audience can be "the people in this person field".
+- **People who leave stay listed**, with `left` set, so the rows that name them
+  still say who they were. Their access ends as described under
+  [Changing access](#changing-access).
+- **Outside Workspace** the values are plain IDs: another tool reading the
+  folder sees `did:key:…` in a person column, and the `.table` rules keep it as
+  an unresolved relation, never dropped.
+- **Nothing new leaves the workspace.** Every member's device already holds
+  these IDs and names in the log; the table only shows them. A person key is
+  the same in every workspace the person is in, so two workspaces that compare
+  their members can tell they share someone, as they could by comparing logs.
+
 ### Groups
 
 A group is a named set of members (a team, an agency), kept as records in the
