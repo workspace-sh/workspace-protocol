@@ -166,12 +166,13 @@ a person can see a cell is whether they can see its row and its column.
   protects nothing; only an audience or a tier does. Apps don't present a
   filter as access control.
 
-### Members: the workspace's own table
+### Members
 
-Every workspace has a table of its members, drawn from its log and kept by
-no one: it can't be edited, and it can't disagree with the log. It is listed
-in the workspace as **Members** and opens, sorts, filters and embeds like any
-table. It is not a file: nothing is written to the workspace folder for it.
+Every workspace keeps a list of its members, drawn from its log and kept by no
+one: it can't be edited, and it can't disagree with the log. It is shown on the
+workspace's page and in its settings (today's Members window), and it is what a
+person field resolves against and offers to pick from. It is not a file, and it
+isn't listed among the workspace's files.
 
 | Column | What it holds | Who sees it |
 |---|---|---|
