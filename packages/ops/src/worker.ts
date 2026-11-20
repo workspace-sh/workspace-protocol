@@ -3,7 +3,8 @@
 // nothing is stored.
 
 import { verifyAccess } from './access.ts';
-import { fetchUsage, freeShare, paidCost, sumByFunction, totals, type DayUsage, type FunctionUsage } from './usage.ts';
+import { fetchUsage, freeShare, paidCost, projectMonth, sumByFunction, totals, type DayUsage, type FunctionUsage } from './usage.ts';
+import { story, sumTotals, type DayTotals } from './story.ts';
 
 export interface Env {
   ACCESS_TEAM_DOMAIN: string;
@@ -15,6 +16,19 @@ export interface Env {
   CF_ACCOUNT_ID?: string;
   /** Optional JSON: Durable Object namespace id to the name shown for it. */
   NAMESPACE_LABELS?: string;
+  /** The relay's daily totals of how meetings ended (its Totals object). */
+  TOTALS?: DurableObjectNamespace;
+}
+
+/** Reads the relay's kept days; none when the binding is missing or fails. */
+async function relayDays(env: Env): Promise<{ day: string; totals: DayTotals }[]> {
+  if (!env.TOTALS) return [];
+  try {
+    const stub = env.TOTALS.get(env.TOTALS.idFromName('all')) as unknown as { days(): Promise<{ day: string; totals: DayTotals }[]> };
+    return await stub.days();
+  } catch {
+    return [];
+  }
 }
 
 export type Period = 'today' | '7d' | 'month';
@@ -36,7 +50,7 @@ export function rangeFor(period: Period, now: Date): { start: string; end: strin
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const num = (n: number) => Math.round(n).toLocaleString('en-GB');
-const money = (n: number) => `$${n.toFixed(n > 0 && n < 0.01 ? 4 : 2)}`;
+const money = (n: number) => `<span data-usd="${n}">$${n.toFixed(n > 0 && n < 0.01 ? 4 : 2)}</span>`;
 function bytes(n: number): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   let i = 0;
@@ -83,6 +97,7 @@ nav a[aria-current] { background: var(--fg); color: var(--bg); border-color: var
 .tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
 .tile b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
 .tile span { color: var(--muted); font-size: 13px; }
+.tile b span { color: inherit; font-size: inherit; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
 .card h3 { margin: 0; font-size: 17px; }
 .card p { margin: 2px 0 10px; color: var(--muted); font-size: 14px; }
@@ -99,11 +114,50 @@ dd { margin: 0; text-align: right; }
 .ok { color: var(--good); }
 .note { color: var(--muted); font-size: 13px; margin: 8px 2px 0; }
 .err { border: 1px solid var(--warn); border-radius: 14px; padding: 12px 14px; }
+.story { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 2px 16px; }
+.story p { margin: 12px 0; }
+.bar { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 4px 0 10px; }
+select { font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--fg); }
+.seg { display: inline-flex; }
+.seg a { padding: 6px 12px; border: 1px solid var(--line); text-decoration: none; color: var(--fg); font-size: 14px; }
+.seg a:first-child { border-radius: 999px 0 0 999px; }
+.seg a:last-child { border-radius: 0 999px 999px 0; border-left: 0; }
+.seg a[aria-current] { background: var(--fg); color: var(--bg); }
+`;
+
+/**
+ * Shows every amount in the chosen currency. Rates come from a free public
+ * service (Frankfurter: European Central Bank rates), asked by the reader's
+ * browser; the page itself holds US dollars only, as Cloudflare bills.
+ */
+const CURRENCY_SCRIPT = `
+(() => {
+  const pick = document.getElementById('currency');
+  if (!pick) return;
+  let rates = { USD: 1 };
+  const show = (code) => {
+    const rate = rates[code];
+    if (!rate) return;
+    const f = new Intl.NumberFormat(undefined, { style: 'currency', currency: code, maximumFractionDigits: 2 });
+    for (const el of document.querySelectorAll('[data-usd]')) {
+      const v = Number(el.dataset.usd) * rate;
+      el.textContent = v > 0 && v < 0.01 ? '< ' + f.format(0.01) : f.format(v);
+    }
+  };
+  let saved = 'USD';
+  try { saved = localStorage.getItem('currency') || 'USD'; } catch {}
+  pick.value = saved;
+  pick.addEventListener('change', () => { try { localStorage.setItem('currency', pick.value); } catch {} show(pick.value); });
+  fetch('https://api.frankfurter.dev/v1/latest?base=USD')
+    .then((r) => r.json())
+    .then((d) => { rates = { USD: 1, ...d.rates }; show(pick.value); })
+    .catch(() => { pick.disabled = true; pick.title = 'Exchange rates are unavailable; amounts are in US dollars.'; });
+})();
 `;
 
 function page(title: string, body: string): Response {
   return new Response(
-    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`,
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)}</title><style>${STYLE}</style></head><body><main>${body}</main><script>${CURRENCY_SCRIPT}</script></body></html>`,
     { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer' } },
   );
 }
@@ -155,26 +209,41 @@ function serviceCards(fns: FunctionUsage[]): string {
     .join('');
 }
 
-function costSection(month: DayUsage[], today: DayUsage | undefined): string {
-  const paid = paidCost(totals(month.flatMap((d) => d.functions)));
-  const lines = paid.lines
+export type Plan = 'free' | 'paid';
+
+function costSection(month: DayUsage[], today: DayUsage | undefined, plan: Plan, period: Period, now: Date): string {
+  const sofar = totals(month.flatMap((d) => d.functions));
+  const projected = projectMonth(sofar, now);
+  const toggle = `<span class="seg">${(['free', 'paid'] as const)
+    .map((p) => `<a href="?p=${period}&plan=${p}"${p === plan ? ' aria-current="page"' : ''}>${p === 'free' ? 'Free plan' : '$5 plan'}</a>`)
+    .join('')}</span>`;
+  const currency = `<select id="currency" aria-label="Currency">${['USD', 'GBP', 'EUR', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'INR', 'ZAR']
+    .map((c) => `<option>${c}</option>`)
+    .join('')}</select>`;
+  const head = `<h2>What it costs</h2><div class="bar">${toggle}${currency}</div>`;
+  if (plan === 'free') {
+    const free = freeShare(totals(today?.functions ?? []))
+      .map(
+        (r) =>
+          `<div class="row"><div>${r.label}<small>${num(r.used)} of ${num(r.limit)} allowed today</small></div><div class="v ${r.share >= 0.8 ? 'over' : 'ok'}">${pct(r.share)}</div></div>`,
+      )
+      .join('');
+    return `${head}<div class="story"><p>On the free plan the relay costs ${money(0)}. The catch is a daily allowance: past it, new connections are refused until midnight UTC instead of being charged.</p></div>
+<h2>Today's share of the allowance</h2><div class="list">${free}</div>${costNote}`;
+  }
+  const now$ = paidCost(sofar);
+  const end$ = paidCost(projected);
+  const lines = end$.lines
     .map(
       (l) =>
-        `<div class="row"><div>${l.label}<small>${num(l.used)} of ${num(l.included)} included</small></div><div class="v${l.cost > 0 ? ' over' : ''}">${money(l.cost)}</div></div>`,
+        `<div class="row"><div>${l.label}<small>about ${num(l.used)} of ${num(l.included)} included</small></div><div class="v${l.cost > 0 ? ' over' : ''}">${money(l.cost)}</div></div>`,
     )
     .join('');
-  const free = freeShare(totals(today?.functions ?? []))
-    .map(
-      (r) =>
-        `<div class="row"><div>${r.label}<small>${num(r.used)} of ${num(r.limit)} a day</small></div><div class="v ${r.share >= 0.8 ? 'over' : 'ok'}">${pct(r.share)}</div></div>`,
-    )
-    .join('');
-  return `<h2>Cost this month</h2>
-<div class="list">${lines}<div class="row total"><div>Usage charges</div><div class="v">${money(paid.usage)}</div></div><div class="row total"><div>With the $5 Workers Paid plan</div><div class="v">${money(paid.withFee)}</div></div></div>
-<h2>Today, against the free plan</h2>
-<div class="list">${free}</div>
-<p class="note">Costs are worked out from Cloudflare's published prices, not read from the invoice. Days are UTC. Cloudflare reports bytes sent but not bytes received, and WebSocket traffic only as message counts.</p>`;
+  return `${head}<div class="story"><p>On the $5 plan, this month's bill so far is ${money(now$.withFee)}. If the rest of the month goes like the days so far, it ends at about <b>${money(end$.withFee)}</b>: the $5 plan fee plus ${money(end$.usage)} of use beyond what the plan includes.</p></div>
+<h2>Projected for the whole month</h2><div class="list">${lines}<div class="row total"><div>Use beyond the plan</div><div class="v">${money(end$.usage)}</div></div><div class="row total"><div>Total with the $5 plan</div><div class="v">${money(end$.withFee)}</div></div></div>${costNote}`;
 }
+
+const costNote = `<p class="note">Worked out from Cloudflare's published prices, not read from the invoice. Days are UTC. Other currencies use the European Central Bank's daily rates.</p>`;
 
 function byDay(days: DayUsage[]): string {
   if (days.length <= 1) return '';
@@ -189,8 +258,8 @@ function byDay(days: DayUsage[]): string {
   return `<h2>By day</h2><div class="list">${rows}</div>`;
 }
 
-export async function render(env: Env, email: string, period: Period, now: Date, fetchImpl: typeof fetch = fetch): Promise<Response> {
-  const nav = `<nav>${PERIODS.map((p) => `<a href="?p=${p.id}"${p.id === period ? ' aria-current="page"' : ''}>${p.label}</a>`).join('')}</nav>`;
+export async function render(env: Env, email: string, period: Period, now: Date, fetchImpl: typeof fetch = fetch, plan: Plan = 'paid'): Promise<Response> {
+  const nav = `<nav>${PERIODS.map((p) => `<a href="?p=${p.id}&plan=${plan}"${p.id === period ? ' aria-current="page"' : ''}>${p.label}</a>`).join('')}</nav>`;
   const head = `<h1>Workspace on Cloudflare</h1><div class="who">Signed in as ${esc(email)}</div>${nav}`;
   if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID) {
     return page('Workspace ops', `${head}<p class="err">This page has no Cloudflare API token to read analytics with yet. Add a token with <b>Account Analytics: Read</b> as the secret <code>CF_API_TOKEN</code> on the <code>workspace-ops</code> worker.</p>`);
@@ -217,9 +286,14 @@ export async function render(env: Env, email: string, period: Period, now: Date,
   const today = days.find((d) => d.date === month.end);
   const fns = sumByFunction(inPeriod);
   const monthCost = paidCost(totals(inMonth.flatMap((d) => d.functions))).usage;
+  const kept = (await relayDays(env)).filter((d) => d.day >= range.start && d.day <= range.end);
+  const told = story(sumTotals(kept.map((d) => d.totals)));
+  const since = kept.length > 0 ? '' : '<p class="note">The relay started keeping these counts on 20 Nov 2026, so earlier days have none.</p>';
   return page(
     'Workspace ops',
-    `${head}${tiles(fns, monthCost)}<h2>By service</h2>${serviceCards(fns)}${byDay(inPeriod)}${costSection(inMonth, today)}`,
+    `${head}<h2>What happened</h2><div class="story">${told.map((t) => `<p>${esc(t)}</p>`).join('')}</div>${since}
+${costSection(inMonth, today, plan, period, now)}
+<h2>The numbers behind it</h2>${tiles(fns, monthCost)}<h2>By service</h2>${serviceCards(fns)}${byDay(inPeriod)}`,
   );
 }
 
@@ -235,6 +309,7 @@ export default {
     if (!verdict.ok) return new Response('Forbidden', { status: 403 });
     const p = url.searchParams.get('p');
     const period: Period = p === 'today' || p === '7d' ? p : 'month';
-    return render(env, verdict.email, period, new Date());
+    const plan: Plan = url.searchParams.get('plan') === 'free' ? 'free' : 'paid';
+    return render(env, verdict.email, period, new Date(), fetch, plan);
   },
 };
