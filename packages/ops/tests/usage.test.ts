@@ -70,11 +70,11 @@ test('the page shows each service and the month’s cost, and asks for a token w
   assert.doesNotMatch(html, /workspace-relay|__unknown__/);
   assert.match(html, /Meeting rooms/);
   assert.match(html, /Relay/);
-  assert.match(html, /Total with the \$5 plan/);
-  assert.match(html, /What happened/);
+  assert.match(html, /Projected this month/);
+  assert.match(html, /Devices connected/);
   assert.match(html, /id="currency"/);
   const free = await (await render(env, "leslie@workspace.sh", "today", new Date("2026-11-20T19:00:00Z"), fakeFetch, "free")).text();
-  assert.match(free, /daily allowance/);
+  assert.match(free, /Busiest allowance today/);
   assert.match(html, /Signed in as leslie@workspace\.sh/);
   const none = await (await render({ ...env, CF_API_TOKEN: undefined }, 'leslie@workspace.sh', 'today', new Date())).text();
   assert.match(none, /no Cloudflare API token/);

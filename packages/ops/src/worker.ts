@@ -4,7 +4,7 @@
 
 import { verifyAccess } from './access.ts';
 import { fetchUsage, freeShare, paidCost, projectMonth, sumByFunction, totals, type DayUsage, type FunctionUsage } from './usage.ts';
-import { story, sumTotals, type DayTotals } from './story.ts';
+import { glance, sumTotals, type Block, type DayTotals } from './story.ts';
 
 export interface Env {
   ACCESS_TEAM_DOMAIN: string;
@@ -93,7 +93,7 @@ h2 { font-size: 17px; margin: 28px 0 10px; }
 nav { display: flex; gap: 6px; margin: 16px 0 8px; flex-wrap: wrap; }
 nav a { padding: 7px 14px; border-radius: 999px; text-decoration: none; color: var(--fg); border: 1px solid var(--line); font-size: 15px; }
 nav a[aria-current] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
 .tile b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
 .tile span { color: var(--muted); font-size: 13px; }
@@ -114,6 +114,24 @@ dd { margin: 0; text-align: right; }
 .ok { color: var(--good); }
 .note { color: var(--muted); font-size: 13px; margin: 8px 2px 0; }
 .err { border: 1px solid var(--warn); border-radius: 14px; padding: 12px 14px; }
+.blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.block { min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.block .top { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.block .label { color: var(--muted); font-size: 13px; }
+.block .value { font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; overflow-wrap: anywhere; }
+.chip { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.good { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+.chip.watch { background: color-mix(in srgb, var(--warn) 20%, transparent); color: var(--warn); }
+.chip.normal { background: color-mix(in srgb, var(--fg) 10%, transparent); color: var(--muted); }
+.chip.idle { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.meter i { display: block; height: 100%; background: var(--good); }
+.meter i.watch { background: var(--warn); }
+details { margin-top: 10px; color: var(--muted); font-size: 14px; }
+details summary { cursor: pointer; }
+details dl { margin-top: 8px; display: block; }
+details dt { color: var(--fg); margin-top: 8px; }
+details dd { text-align: left; margin: 2px 0 0; }
 .story { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 2px 16px; }
 .story p { margin: 12px 0; }
 .bar { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 4px 0 10px; }
@@ -211,6 +229,14 @@ function serviceCards(fns: FunctionUsage[]): string {
 
 export type Plan = 'free' | 'paid';
 
+function blockHtml(b: { label: string; value: string; state: string; word: string }, extra = ''): string {
+  return `<div class="block"><div class="top"><span class="label">${esc(b.label)}</span><span class="chip ${b.state}">${esc(b.word)}</span></div><div class="value">${b.value}</div>${extra}</div>`;
+}
+
+function meanings(items: { label: string; meaning: string }[]): string {
+  return `<details><summary>What these mean</summary><dl>${items.map((i) => `<dt>${esc(i.label)}</dt><dd>${esc(i.meaning)}</dd>`).join('')}</dl></details>`;
+}
+
 function costSection(month: DayUsage[], today: DayUsage | undefined, plan: Plan, period: Period, now: Date): string {
   const sofar = totals(month.flatMap((d) => d.functions));
   const projected = projectMonth(sofar, now);
@@ -220,27 +246,45 @@ function costSection(month: DayUsage[], today: DayUsage | undefined, plan: Plan,
   const currency = `<select id="currency" aria-label="Currency">${['USD', 'GBP', 'EUR', 'CAD', 'AUD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'INR', 'ZAR']
     .map((c) => `<option>${c}</option>`)
     .join('')}</select>`;
-  const head = `<h2>What it costs</h2><div class="bar">${toggle}${currency}</div>`;
+  const head = `<h2>Cost</h2><div class="bar">${toggle}${currency}</div>`;
   if (plan === 'free') {
-    const free = freeShare(totals(today?.functions ?? []))
-      .map(
-        (r) =>
-          `<div class="row"><div>${r.label}<small>${num(r.used)} of ${num(r.limit)} allowed today</small></div><div class="v ${r.share >= 0.8 ? 'over' : 'ok'}">${pct(r.share)}</div></div>`,
-      )
-      .join('');
-    return `${head}<div class="story"><p>On the free plan the relay costs ${money(0)}. The catch is a daily allowance: past it, new connections are refused until midnight UTC instead of being charged.</p></div>
-<h2>Today's share of the allowance</h2><div class="list">${free}</div>${costNote}`;
+    const shares = freeShare(totals(today?.functions ?? []));
+    const worst = Math.max(...shares.map((r) => r.share));
+    const blocks = [
+      blockHtml({ label: 'Cost', value: money(0), state: 'good', word: 'Free' }),
+      blockHtml({ label: 'Busiest allowance today', value: pct(worst), state: worst >= 0.8 ? 'watch' : 'good', word: worst >= 0.8 ? 'Near limit' : 'Plenty left' }),
+      ...shares.map((r) =>
+        blockHtml(
+          { label: r.label, value: pct(r.share), state: r.share >= 0.8 ? 'watch' : 'normal', word: `of ${num(r.limit)}` },
+          `<div class="meter"><i class="${r.share >= 0.8 ? 'watch' : ''}" style="width:${Math.min(100, r.share * 100).toFixed(1)}%"></i></div>`,
+        ),
+      ),
+    ].join('');
+    return `${head}<div class="blocks">${blocks}</div>${meanings([
+      { label: 'Free plan', meaning: 'Costs nothing. Each day has an allowance; past it, new connections are refused until midnight UTC instead of being charged.' },
+      { label: 'Busiest allowance today', meaning: 'The fullest of the three daily allowances. Above 80% it is marked.' },
+    ])}${costNote}`;
   }
   const now$ = paidCost(sofar);
   const end$ = paidCost(projected);
-  const lines = end$.lines
-    .map(
-      (l) =>
-        `<div class="row"><div>${l.label}<small>about ${num(l.used)} of ${num(l.included)} included</small></div><div class="v${l.cost > 0 ? ' over' : ''}">${money(l.cost)}</div></div>`,
-    )
-    .join('');
-  return `${head}<div class="story"><p>On the $5 plan, this month's bill so far is ${money(now$.withFee)}. If the rest of the month goes like the days so far, it ends at about <b>${money(end$.withFee)}</b>: the $5 plan fee plus ${money(end$.usage)} of use beyond what the plan includes.</p></div>
-<h2>Projected for the whole month</h2><div class="list">${lines}<div class="row total"><div>Use beyond the plan</div><div class="v">${money(end$.usage)}</div></div><div class="row total"><div>Total with the $5 plan</div><div class="v">${money(end$.withFee)}</div></div></div>${costNote}`;
+  const blocks = [
+    blockHtml({ label: 'Projected this month', value: money(end$.withFee), state: end$.usage > 0 ? 'watch' : 'good', word: end$.usage > 0 ? 'Over plan' : 'Within plan' }),
+    blockHtml({ label: 'So far this month', value: money(now$.withFee), state: 'normal', word: 'To date' }),
+    blockHtml({ label: 'Plan fee', value: money(5), state: 'normal', word: 'Fixed' }),
+    blockHtml({ label: 'Use beyond the plan', value: money(end$.usage), state: end$.usage > 0 ? 'watch' : 'good', word: end$.usage > 0 ? 'Charged' : 'None' }),
+    ...end$.lines.map((l) => {
+      const share = l.used / l.included;
+      return blockHtml(
+        { label: l.label, value: pct(share), state: share >= 0.8 ? 'watch' : 'normal', word: 'of included' },
+        `<div class="meter"><i class="${share >= 0.8 ? 'watch' : ''}" style="width:${Math.min(100, share * 100).toFixed(1)}%"></i></div>`,
+      );
+    }),
+  ].join('');
+  return `${head}<div class="blocks">${blocks}</div>${meanings([
+    { label: 'Projected this month', meaning: 'What the month will cost if the rest of it goes like the days so far: the $5 fee plus any use beyond what the plan includes.' },
+    { label: 'Use beyond the plan', meaning: 'The $5 plan includes 10 million worker requests, 30 million CPU milliseconds, 1 million Durable Object requests and 400,000 GB-seconds of Durable Object time each month. Only use past those is charged.' },
+    { label: 'Percentages', meaning: "How much of each included amount the month is projected to use." },
+  ])}${costNote}`;
 }
 
 const costNote = `<p class="note">Worked out from Cloudflare's published prices, not read from the invoice. Days are UTC. Other currencies use the European Central Bank's daily rates.</p>`;
@@ -287,11 +331,11 @@ export async function render(env: Env, email: string, period: Period, now: Date,
   const fns = sumByFunction(inPeriod);
   const monthCost = paidCost(totals(inMonth.flatMap((d) => d.functions))).usage;
   const kept = (await relayDays(env)).filter((d) => d.day >= range.start && d.day <= range.end);
-  const told = story(sumTotals(kept.map((d) => d.totals)));
+  const blocks = glance(sumTotals(kept.map((d) => d.totals)));
   const since = kept.length > 0 ? '' : '<p class="note">The relay started keeping these counts on 20 Nov 2026, so earlier days have none.</p>';
   return page(
     'Workspace ops',
-    `${head}<h2>What happened</h2><div class="story">${told.map((t) => `<p>${esc(t)}</p>`).join('')}</div>${since}
+    `${head}<h2>Relay</h2><div class="blocks">${blocks.map((b: Block) => blockHtml(b)).join('')}</div>${meanings(blocks)}${since}
 ${costSection(inMonth, today, plan, period, now)}
 <h2>The numbers behind it</h2>${tiles(fns, monthCost)}<h2>By service</h2>${serviceCards(fns)}${byDay(inPeriod)}`,
   );
