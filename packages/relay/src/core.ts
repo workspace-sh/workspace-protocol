@@ -111,6 +111,97 @@ export interface Side {
   joinedAt: number;
   pairedAt: number | null;
   bytes: number;
+  /** Set once the side's end has been recorded, so it is counted once. */
+  ended?: boolean;
+}
+
+/** How one device's side of a meeting ended, for the relay's own counts. */
+export type Outcome =
+  /** The device closed after meeting the other. */
+  | 'left'
+  /** The other device left, so this one was closed. */
+  | 'peer_left'
+  /** The device closed while still waiting. */
+  | 'gave_up'
+  /** Nobody came within the wait limit. */
+  | 'no_peer'
+  /** Its heartbeat stopped: a lost network or a suspended app. */
+  | 'silent'
+  /** A frame, byte or time limit. */
+  | 'limit'
+  /** It broke the protocol. */
+  | 'protocol'
+  /** The connection failed without a close. */
+  | 'dropped';
+
+/** The outcome for a side the relay closes with `code`. */
+export function outcomeOfClose(code: number): Outcome {
+  if (code === CLOSE.NO_PEER) return 'no_peer';
+  if (code === CLOSE.SILENT) return 'silent';
+  if (code === CLOSE.LIMIT) return 'limit';
+  if (code === CLOSE.PEER_LEFT) return 'peer_left';
+  return 'protocol';
+}
+
+/**
+ * What the relay records when a side ends: how, how long it waited, how long
+ * it was connected to the other device, and the bytes it sent. No key, no
+ * address: nothing that says who met whom.
+ */
+export interface MeetingEvent {
+  outcome: Outcome;
+  met: boolean;
+  waitedMs: number;
+  connectedMs: number;
+  bytes: number;
+}
+
+export function meetingEvent(side: Side, outcome: Outcome, now: number): MeetingEvent {
+  const met = side.pairedAt !== null;
+  return {
+    outcome,
+    met,
+    waitedMs: (side.pairedAt ?? now) - side.joinedAt,
+    connectedMs: met ? now - side.pairedAt! : 0,
+    bytes: side.bytes,
+  };
+}
+
+/** One day's totals: the only thing the relay keeps, and only for TOTALS_KEEP_DAYS. */
+export interface DayTotals {
+  /** Sides that ended, by outcome. */
+  outcomes: Partial<Record<Outcome, number>>;
+  /** Sides that met the other device. Two make one meeting. */
+  met: number;
+  waitedMs: number;
+  connectedMs: number;
+  bytes: number;
+}
+
+export const TOTALS_KEEP_DAYS = 31;
+
+export function emptyTotals(): DayTotals {
+  return { outcomes: {}, met: 0, waitedMs: 0, connectedMs: 0, bytes: 0 };
+}
+
+/** `t` with one more ended side added: everything the event says becomes a sum. */
+export function addEvent(t: DayTotals, e: MeetingEvent): DayTotals {
+  return {
+    outcomes: { ...t.outcomes, [e.outcome]: (t.outcomes[e.outcome] ?? 0) + 1 },
+    met: t.met + (e.met ? 1 : 0),
+    waitedMs: t.waitedMs + e.waitedMs,
+    connectedMs: t.connectedMs + e.connectedMs,
+    bytes: t.bytes + e.bytes,
+  };
+}
+
+/** The UTC day an event falls in, as YYYY-MM-DD. */
+export const dayOf = (now: number) => new Date(now).toISOString().slice(0, 10);
+
+/** Days older than the keep window, among `days`. */
+export function expiredDays(days: string[], now: number): string[] {
+  const oldest = dayOf(now - (TOTALS_KEEP_DAYS - 1) * 86_400_000);
+  return days.filter((d) => d < oldest);
 }
 
 export function newSide(now: number): Side {
