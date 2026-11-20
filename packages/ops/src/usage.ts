@@ -208,3 +208,21 @@ export async function fetchUsage(opts: {
   if (!raw) throw new Error('Cloudflare analytics: no such account, or the token cannot read it');
   return fromRaw(raw, opts.labels);
 }
+
+/**
+ * The month's usage if the rest of it goes as it has so far: the totals to
+ * date, scaled to the whole month by the share of it that has passed.
+ */
+export function projectMonth(t: Totals, now: Date): Totals {
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+  const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
+  const k = (end - start) / Math.max(now.getTime() - start, 3_600_000);
+  return {
+    workerRequests: t.workerRequests * k,
+    workerCpuMs: t.workerCpuMs * k,
+    doRequests: t.doRequests * k,
+    doGbSeconds: t.doGbSeconds * k,
+    bytesOut: t.bytesOut * k,
+    errors: t.errors * k,
+  };
+}
