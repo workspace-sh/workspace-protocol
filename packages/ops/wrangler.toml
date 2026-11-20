@@ -11,7 +11,7 @@ compatibility_date = "2026-11-01"
 # application exists).
 ACCESS_TEAM_DOMAIN = "https://workspace-sh.cloudflareaccess.com"
 ALLOWED_EMAIL = "leslie@workspace.sh"
-ACCESS_AUD = ""
+ACCESS_AUD = "ce8286abb371dc54e7e83199523bad373c7740126fa970e717d7a94af374c942"
 
 [observability]
 enabled = false
