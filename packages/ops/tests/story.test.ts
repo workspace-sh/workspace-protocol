@@ -30,3 +30,16 @@ test('the month projects from the share of it that has passed', () => {
   assert.equal(Math.round(p.workerRequests), 200);
   assert.equal(Math.round(p.doGbSeconds), 100);
 });
+
+import { glance } from '../src/story.ts';
+
+test('at a glance: each block has a value and a state word', () => {
+  const b = glance({ outcomes: { left: 3, peer_left: 3, no_peer: 310, silent: 2, dropped: 1 }, met: 6, waitedMs: 0, connectedMs: 2 * 7_800_000, bytes: 4_100_000 });
+  const by = Object.fromEntries(b.map((x) => [x.label, x]));
+  assert.equal(by['Devices connected']!.value, '3');
+  assert.equal(by['Devices connected']!.word, 'Working');
+  assert.equal(by['Waits unanswered']!.value, '310');
+  assert.equal(by['Waits unanswered']!.word, 'Normal');
+  assert.equal(by['Problems']!.state, 'watch');
+  assert.equal(glance({ outcomes: {}, met: 0, waitedMs: 0, connectedMs: 0, bytes: 0 })[0]!.word, 'Idle');
+});
