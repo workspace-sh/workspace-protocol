@@ -17,11 +17,25 @@
 //      unchanged. Text frames from devices are not allowed.
 //   5. When either device leaves, the relay closes the other with
 //      CLOSE.PEER_LEFT. The key can be used again for a new meeting.
+//   6. At any time a device may send the text frame `ping`; the relay
+//      answers `pong` and passes nothing on. A device that has sent one is
+//      taken to be sending them, every HEARTBEAT_MS: once it has been silent
+//      for `silenceMs` it is closed with CLOSE.SILENT, and its meeting with
+//      it. A phone that loses its network or is suspended is let go in
+//      seconds, and the other device can look for it another way. A device
+//      that never pings is held to the other limits only.
 
 export const PROTOCOL_VERSION = 1;
 
 /** The text frame the relay sends to both devices once they are paired. */
 export const PAIRED = 'paired';
+
+/** The heartbeat a device may send, and the relay's answer. */
+export const PING = 'ping';
+export const PONG = 'pong';
+
+/** How often a device that pings sends one. */
+export const HEARTBEAT_MS = 20_000;
 
 /** Close codes the relay uses (the 4000 to 4999 range is for applications). */
 export const CLOSE = {
@@ -33,6 +47,8 @@ export const CLOSE = {
   NO_PEER: 4002,
   /** A frame, the meeting's bytes or its duration went over a limit. */
   LIMIT: 4003,
+  /** A device that sends heartbeats stopped sending them. */
+  SILENT: 4004,
 } as const;
 
 export interface Limits {
@@ -44,6 +60,8 @@ export interface Limits {
   maxMeetingBytes: number;
   /** How long one meeting may last. */
   maxMeetingMs: number;
+  /** How long a device that pings may go without one before it is closed. */
+  silenceMs: number;
 }
 
 export const DEFAULT_LIMITS: Limits = {
@@ -51,6 +69,8 @@ export const DEFAULT_LIMITS: Limits = {
   maxFrameBytes: 1024 * 1024,
   maxMeetingBytes: 512 * 1024 * 1024,
   maxMeetingMs: 2 * 60 * 60 * 1000,
+  // Two heartbeats missed, and a little over.
+  silenceMs: 45_000,
 };
 
 /** Reads limits from string settings (environment variables), keeping defaults for anything unset or invalid. */
@@ -65,6 +85,7 @@ export function limitsFrom(env: Record<string, unknown>, base: Limits = DEFAULT_
     maxFrameBytes: read('RELAY_MAX_FRAME_BYTES', base.maxFrameBytes),
     maxMeetingBytes: read('RELAY_MAX_MEETING_BYTES', base.maxMeetingBytes),
     maxMeetingMs: read('RELAY_MAX_MEETING_MS', base.maxMeetingMs),
+    silenceMs: read('RELAY_SILENCE_MS', base.silenceMs),
   };
 }
 
@@ -129,10 +150,16 @@ export function onFrame(
 
 export type Deadline = { at: number; code: number; reason: string };
 
-/** When a side must be closed if nothing else happens first. */
-export function deadlineFor(side: Side, limits: Limits): Deadline {
-  if (side.pairedAt === null) {
-    return { at: side.joinedAt + limits.waitMs, code: CLOSE.NO_PEER, reason: 'no peer arrived' };
-  }
-  return { at: side.pairedAt + limits.maxMeetingMs, code: CLOSE.LIMIT, reason: 'meeting time limit' };
+/**
+ * When a side must be closed if nothing else happens first. `pingedAt` is
+ * when it last sent a heartbeat, or null if it never has.
+ */
+export function deadlineFor(side: Side, limits: Limits, pingedAt: number | null = null): Deadline {
+  const limit: Deadline =
+    side.pairedAt === null
+      ? { at: side.joinedAt + limits.waitMs, code: CLOSE.NO_PEER, reason: 'no peer arrived' }
+      : { at: side.pairedAt + limits.maxMeetingMs, code: CLOSE.LIMIT, reason: 'meeting time limit' };
+  if (pingedAt === null) return limit;
+  const silent = pingedAt + limits.silenceMs;
+  return silent < limit.at ? { at: silent, code: CLOSE.SILENT, reason: 'heartbeat stopped' } : limit;
 }

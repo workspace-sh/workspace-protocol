@@ -27,6 +27,7 @@ relaySuite('Cloudflare (local)', async () => {
     RELAY_MAX_FRAME_BYTES: TEST_LIMITS.maxFrameBytes,
     RELAY_MAX_MEETING_BYTES: TEST_LIMITS.maxMeetingBytes,
     RELAY_MAX_MEETING_MS: TEST_LIMITS.maxMeetingMs,
+    RELAY_SILENCE_MS: TEST_LIMITS.silenceMs,
   };
   const args = ['wrangler', 'dev', '--ip', '127.0.0.1', '--port', String(port), '--show-interactive-dev-session=false'];
   for (const [k, v] of Object.entries(vars)) args.push('--var', `${k}:${v}`);
