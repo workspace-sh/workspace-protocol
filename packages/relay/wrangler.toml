@@ -14,7 +14,17 @@ class_name = "Meeting"
 tag = "v1"
 new_sqlite_classes = ["Meeting"]
 
+# Daily totals of how meetings ended: one object, no per-meeting records.
+[[durable_objects.bindings]]
+name = "TOTALS"
+class_name = "Totals"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Totals"]
+
 # No request logs: the relay keeps no record of who met whom. Cloudflare's
 # own analytics still see request metadata.
 [observability]
 enabled = false
+

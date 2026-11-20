@@ -20,10 +20,19 @@ import {
   admit,
   deadlineFor,
   limitsFrom,
+  addEvent,
+  dayOf,
+  emptyTotals,
+  expiredDays,
+  meetingEvent,
+  outcomeOfClose,
   meetingKeyFrom,
   newSide,
   onFrame,
   type Limits,
+  type DayTotals,
+  type MeetingEvent,
+  type Outcome,
   type Side,
 } from './core.ts';
 
@@ -34,6 +43,8 @@ export interface Env {
   RELAY_MAX_MEETING_BYTES?: string;
   RELAY_MAX_MEETING_MS?: string;
   RELAY_SILENCE_MS?: string;
+  /** Daily totals of how meetings ended (one object). Optional: without it nothing is counted. */
+  TOTALS?: DurableObjectNamespace<Totals>;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -112,7 +123,27 @@ export class Meeting extends DurableObject<Env> {
     for (const other of peers) if (other !== ws) other.send(message);
   }
 
+  /**
+   * Counts how a side ended, once, into the day's totals. Only sums are
+   * kept: nothing names the meeting or the device, and no event is stored.
+   */
+  private record(ws: WebSocket, outcome: Outcome): void {
+    const side = this.sideOf(ws);
+    if (!side || side.ended) return;
+    try {
+      ws.serializeAttachment({ ...side, ended: true } satisfies Side);
+    } catch {
+      // closed: its attachment can no longer change, and it ends here anyway
+    }
+    const e = meetingEvent(side, outcome, Date.now());
+    const totals = this.env.TOTALS;
+    if (!totals) return;
+    // Not awaited by the close: counting never holds up a meeting ending.
+    this.ctx.waitUntil(totals.get(totals.idFromName('all')).add(e).catch(() => undefined));
+  }
+
   override async webSocketClose(ws: WebSocket, code: number, reason: string): Promise<void> {
+    this.record(ws, this.sideOf(ws)?.pairedAt != null ? 'left' : 'gave_up');
     try {
       ws.close(code, reason);
     } catch {
@@ -123,6 +154,7 @@ export class Meeting extends DurableObject<Env> {
   }
 
   override async webSocketError(ws: WebSocket): Promise<void> {
+    this.record(ws, 'dropped');
     this.peerLeft(ws);
     await this.scheduleAlarm();
   }
@@ -138,6 +170,7 @@ export class Meeting extends DurableObject<Env> {
 
   /** Closes one side and, with it, the meeting. */
   private end(ws: WebSocket, code: number, reason: string): void {
+    this.record(ws, outcomeOfClose(code));
     try {
       ws.close(code, reason);
     } catch {
@@ -149,11 +182,42 @@ export class Meeting extends DurableObject<Env> {
   private peerLeft(gone: WebSocket): void {
     for (const other of this.open()) {
       if (other === gone) continue;
+      this.record(other, 'peer_left');
       try {
         other.close(CLOSE.PEER_LEFT, "peer left");
       } catch {
         // already closed
       }
     }
+  }
+}
+
+/**
+ * The relay's only record: per UTC day, how many sides ended each way, how
+ * many met, and the summed waiting, connected time and bytes. Days older than
+ * TOTALS_KEEP_DAYS are deleted. Read by the maintenance page through its own
+ * binding; there is no public address for it.
+ */
+export class Totals extends DurableObject<Env> {
+  async add(e: MeetingEvent): Promise<void> {
+    const now = Date.now();
+    const key = `day:${dayOf(now)}`;
+    const had = (await this.ctx.storage.get<DayTotals>(key)) ?? emptyTotals();
+    await this.ctx.storage.put(key, addEvent(had, e));
+    if ((await this.ctx.storage.getAlarm()) === null) await this.ctx.storage.setAlarm(now + 86_400_000);
+  }
+
+  /** The kept days, oldest first. */
+  async days(): Promise<{ day: string; totals: DayTotals }[]> {
+    const all = await this.ctx.storage.list<DayTotals>({ prefix: 'day:' });
+    return [...all.entries()].map(([k, totals]) => ({ day: k.slice(4), totals }));
+  }
+
+  override async alarm(): Promise<void> {
+    const now = Date.now();
+    const days = [...(await this.ctx.storage.list({ prefix: 'day:' })).keys()].map((k) => k.slice(4));
+    const old = expiredDays(days, now);
+    if (old.length > 0) await this.ctx.storage.delete(old.map((d) => `day:${d}`));
+    if (days.length > old.length) await this.ctx.storage.setAlarm(now + 86_400_000);
   }
 }
