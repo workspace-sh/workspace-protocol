@@ -13,6 +13,10 @@ The same code runs in all three:
   by us. Free tier for casual workspaces, paid tier for storage and
   bandwidth beyond a threshold.
 
+Each can run on a server or serverless (see [Two kinds](./README.md#two-kinds-on-a-server-or-serverless)).
+A serverless Lighthouse needs no machine kept running, but for now only
+relays.
+
 A workspace can be pointed at multiple Lighthouses. None of them is
 authoritative; they're all just peers with good uptime.
 
