@@ -48,30 +48,57 @@ function bytes(n: number): string {
 }
 const pct = (s: number) => `${(s * 100).toFixed(s < 0.01 ? 2 : 1)}%`;
 
+/** What each service is, in words, for a reader who didn't build it. */
+const SERVICES: Record<string, { label: string; role: string }> = {
+  'workspace-relay': {
+    label: 'Relay',
+    role: "Pairs two devices that can't reach each other directly and passes their encrypted traffic, unread.",
+  },
+  'workspace-ops': { label: 'This dashboard', role: 'This page.' },
+  __unknown__: {
+    label: 'Not tied to a service',
+    role: "Requests Cloudflare couldn't attribute to a worker, such as calls to an address while a worker was being replaced.",
+  },
+};
+const serviceOf = (name: string) => SERVICES[name] ?? { label: name, role: '' };
+
+const minutes = (gbSeconds: number) => {
+  const s = gbSeconds / 0.125;
+  return s < 90 ? `${Math.round(s)} s` : s < 5400 ? `${Math.round(s / 60)} min` : `${(s / 3600).toFixed(1)} h`;
+};
+
 const STYLE = `
-:root { color-scheme: light dark; --bg:#fbfbfa; --fg:#1d1d1f; --muted:#6b6b70; --line:#e3e3e6; --card:#ffffff; --accent:#2f6fde; --warn:#b26100; }
-@media (prefers-color-scheme: dark) { :root { --bg:#141416; --fg:#ececee; --muted:#9a9aa1; --line:#2c2c31; --card:#1c1c1f; --accent:#7aa7ff; --warn:#f0a050; } }
+:root { color-scheme: light dark; --bg:#f6f6f4; --fg:#1d1d1f; --muted:#6b6b70; --line:#e3e3e6; --card:#ffffff; --warn:#b26100; --good:#2e7d32; }
+@media (prefers-color-scheme: dark) { :root { --bg:#111113; --fg:#ececee; --muted:#9a9aa1; --line:#2a2a2f; --card:#1c1c1f; --warn:#f0a050; --good:#7bc77e; } }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
-header { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; }
-h1 { font-size: 20px; margin: 0; }
-h2 { font-size: 15px; margin: 28px 0 8px; }
-.who { color: var(--muted); font-size: 13px; }
-nav { display: flex; gap: 4px; margin: 16px 0 4px; flex-wrap: wrap; }
-nav a { padding: 5px 12px; border-radius: 999px; text-decoration: none; color: var(--fg); border: 1px solid var(--line); font-size: 13px; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-text-size-adjust: 100%; }
+main { max-width: 720px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 24px; margin: 0; }
+h2 { font-size: 17px; margin: 28px 0 10px; }
+.who { color: var(--muted); font-size: 14px; margin-top: 2px; }
+nav { display: flex; gap: 6px; margin: 16px 0 8px; flex-wrap: wrap; }
+nav a { padding: 7px 14px; border-radius: 999px; text-decoration: none; color: var(--fg); border: 1px solid var(--line); font-size: 15px; }
 nav a[aria-current] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-th, td { padding: 7px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
-tr:last-child td { border-bottom: 0; }
-th { font-weight: 600; font-size: 12px; color: var(--muted); }
-th:first-child, td:first-child { text-align: left; }
-td.kind { color: var(--muted); font-size: 12px; text-align: left; }
-tfoot td { font-weight: 600; border-top: 1px solid var(--line); }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.tile b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+.tile span { color: var(--muted); font-size: 13px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+.card h3 { margin: 0; font-size: 17px; }
+.card p { margin: 2px 0 10px; color: var(--muted); font-size: 14px; }
+dl { margin: 0; display: grid; grid-template-columns: 1fr auto; row-gap: 6px; column-gap: 12px; font-variant-numeric: tabular-nums; }
+dt { color: var(--muted); }
+dd { margin: 0; text-align: right; }
+.list { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 16px; }
+.row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.row:last-child { border-bottom: 0; }
+.row small { display: block; color: var(--muted); font-size: 13px; }
+.row .v { text-align: right; white-space: nowrap; }
+.total { font-weight: 600; }
 .over { color: var(--warn); font-weight: 600; }
+.ok { color: var(--good); }
 .note { color: var(--muted); font-size: 13px; margin: 8px 2px 0; }
-.err { border: 1px solid var(--warn); border-radius: 10px; padding: 12px 14px; }
+.err { border: 1px solid var(--warn); border-radius: 14px; padding: 12px 14px; }
 `;
 
 function page(title: string, body: string): Response {
@@ -81,38 +108,72 @@ function page(title: string, body: string): Response {
   );
 }
 
-function functionsTable(fns: FunctionUsage[]): string {
+function tiles(fns: FunctionUsage[], monthCost: number): string {
+  const workers = fns.filter((f) => f.kind === 'worker');
+  const objects = fns.filter((f) => f.kind === 'durable-object');
+  const opened = workers.reduce((n, f) => n + f.requests, 0);
+  const awake = objects.reduce((n, f) => n + f.gbSeconds, 0);
+  const sent = fns.reduce((n, f) => n + f.bytesOut, 0);
+  return `<div class="tiles">
+<div class="tile"><b>${num(opened)}</b><span>Connections opened</span></div>
+<div class="tile"><b>${minutes(awake)}</b><span>Relay awake, billed</span></div>
+<div class="tile"><b>${bytes(sent)}</b><span>Data sent</span></div>
+<div class="tile"><b>${money(monthCost)}</b><span>Usage cost this month</span></div>
+</div>`;
+}
+
+function serviceCards(fns: FunctionUsage[]): string {
   if (fns.length === 0) return '<p class="note">Nothing ran in this period.</p>';
-  const rows = fns
-    .map(
-      (f) => `<tr><td>${esc(f.name)}</td><td class="kind">${f.kind === 'worker' ? 'Worker' : 'Durable Objects'}</td>
-<td>${num(f.requests)}</td><td>${f.errors ? num(f.errors) : '–'}</td><td>${num(f.cpuMs)}</td>
-<td>${f.kind === 'worker' ? '–' : num(f.gbSeconds)}</td><td>${f.kind === 'worker' ? '–' : num(f.wsIn)}</td><td>${f.kind === 'worker' ? '–' : num(f.wsOut)}</td><td>${bytes(f.bytesOut)}</td></tr>`,
-    )
+  // Known services first, in the order they're listed; anything else after.
+  const order = Object.keys(SERVICES);
+  const rank = (f: FunctionUsage) => (order.includes(f.name) ? order.indexOf(f.name) : order.length - 0.5);
+  return [...fns]
+    .sort((a, b) => rank(a) - rank(b))
+    .map((f) => {
+      const s = serviceOf(f.name);
+      const rows =
+        f.kind === 'worker'
+          ? [
+              ['Connections opened', num(f.requests)],
+              ['Failed', f.errors ? num(f.errors) : 'none'],
+              ['Processing time', `${num(f.cpuMs)} ms`],
+              ['Data sent', bytes(f.bytesOut)],
+            ]
+          : [
+              ['Meetings and messages handled', num(f.requests)],
+              ['Ended with an error', f.errors ? num(f.errors) : 'none'],
+              ['Awake, billed', `${minutes(f.gbSeconds)} · ${num(f.gbSeconds)} GB-s`],
+              ['Messages to devices', num(f.wsOut)],
+              ...(f.wsIn ? [['Messages from devices', num(f.wsIn)]] : []),
+              ['Data sent', bytes(f.bytesOut)],
+            ];
+      const what = f.kind === 'worker' ? 'Front door' : 'Meeting rooms';
+      return `<div class="card"><h3>${esc(s.label)} · ${what}</h3><p>${esc(
+        f.kind === 'worker' ? s.role : 'Where two devices meet: one room per pair, asleep and free while nothing passes.',
+      )}</p><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div>`;
+    })
     .join('');
-  const t = fns.reduce(
-    (a, f) => ({ requests: a.requests + f.requests, errors: a.errors + f.errors, cpuMs: a.cpuMs + f.cpuMs, gb: a.gb + f.gbSeconds, wsIn: a.wsIn + f.wsIn, wsOut: a.wsOut + f.wsOut, out: a.out + f.bytesOut }),
-    { requests: 0, errors: 0, cpuMs: 0, gb: 0, wsIn: 0, wsOut: 0, out: 0 },
-  );
-  return `<div class="scroll"><table><thead><tr><th>Service</th><th>Kind</th><th>Requests</th><th>Errors</th><th>CPU (ms)</th><th>Active (GB-s)</th><th>WS in</th><th>WS out</th><th>Sent</th></tr></thead>
-<tbody>${rows}</tbody><tfoot><tr><td>All</td><td></td><td>${num(t.requests)}</td><td>${t.errors ? num(t.errors) : '–'}</td><td>${num(t.cpuMs)}</td><td>${num(t.gb)}</td><td>${num(t.wsIn)}</td><td>${num(t.wsOut)}</td><td>${bytes(t.out)}</td></tr></tfoot></table></div>`;
 }
 
 function costSection(month: DayUsage[], today: DayUsage | undefined): string {
   const paid = paidCost(totals(month.flatMap((d) => d.functions)));
-  const paidRows = paid.lines
-    .map((l) => `<tr><td>${l.label}</td><td>${num(l.used)}</td><td>${num(l.included)}</td><td>${money(l.cost)}</td></tr>`)
+  const lines = paid.lines
+    .map(
+      (l) =>
+        `<div class="row"><div>${l.label}<small>${num(l.used)} of ${num(l.included)} included</small></div><div class="v${l.cost > 0 ? ' over' : ''}">${money(l.cost)}</div></div>`,
+    )
     .join('');
-  const free = freeShare(totals(today?.functions ?? []));
-  const freeRows = free
-    .map((r) => `<tr><td>${r.label}</td><td>${num(r.used)}</td><td>${num(r.limit)}</td><td${r.share >= 0.8 ? ' class="over"' : ''}>${pct(r.share)}</td></tr>`)
+  const free = freeShare(totals(today?.functions ?? []))
+    .map(
+      (r) =>
+        `<div class="row"><div>${r.label}<small>${num(r.used)} of ${num(r.limit)} a day</small></div><div class="v ${r.share >= 0.8 ? 'over' : 'ok'}">${pct(r.share)}</div></div>`,
+    )
     .join('');
-  return `<h2>Cost this month, on the $5 Workers Paid plan</h2>
-<div class="scroll"><table><thead><tr><th>Usage</th><th>Used</th><th>Included</th><th>Over, charged</th></tr></thead><tbody>${paidRows}</tbody>
-<tfoot><tr><td>Usage charges</td><td></td><td></td><td>${money(paid.usage)}</td></tr><tr><td>With the plan's $5</td><td></td><td></td><td>${money(paid.withFee)}</td></tr></tfoot></table></div>
-<h2>Today against the free plan's daily allowance</h2>
-<div class="scroll"><table><thead><tr><th>Usage</th><th>Used today</th><th>Daily allowance</th><th>Share</th></tr></thead><tbody>${freeRows}</tbody></table></div>
-<p class="note">Worked out from Cloudflare's published prices, not read from the invoice. Durable Object requests include incoming WebSocket messages at 20 to 1. Days are UTC.</p>`;
+  return `<h2>Cost this month</h2>
+<div class="list">${lines}<div class="row total"><div>Usage charges</div><div class="v">${money(paid.usage)}</div></div><div class="row total"><div>With the $5 Workers Paid plan</div><div class="v">${money(paid.withFee)}</div></div></div>
+<h2>Today, against the free plan</h2>
+<div class="list">${free}</div>
+<p class="note">Costs are worked out from Cloudflare's published prices, not read from the invoice. Days are UTC. Cloudflare reports bytes sent but not bytes received, and WebSocket traffic only as message counts.</p>`;
 }
 
 function byDay(days: DayUsage[]): string {
@@ -121,15 +182,16 @@ function byDay(days: DayUsage[]): string {
     .reverse()
     .map((d) => {
       const t = totals(d.functions);
-      return `<tr><td>${d.date}</td><td>${num(t.workerRequests)}</td><td>${num(t.doRequests)}</td><td>${num(t.doGbSeconds)}</td><td>${t.errors ? num(t.errors) : '–'}</td><td>${bytes(t.bytesOut)}</td></tr>`;
+      const opened = d.functions.filter((f) => f.kind === 'worker').reduce((n, f) => n + f.requests, 0);
+      return `<div class="row"><div>${new Date(`${d.date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}<small>${num(opened)} connections · ${bytes(t.bytesOut)} sent</small></div><div class="v">${minutes(t.doGbSeconds)} awake</div></div>`;
     })
     .join('');
-  return `<h2>By day</h2><div class="scroll"><table><thead><tr><th>Day</th><th>Worker requests</th><th>DO requests</th><th>DO active (GB-s)</th><th>Errors</th><th>Sent</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<h2>By day</h2><div class="list">${rows}</div>`;
 }
 
 export async function render(env: Env, email: string, period: Period, now: Date, fetchImpl: typeof fetch = fetch): Promise<Response> {
   const nav = `<nav>${PERIODS.map((p) => `<a href="?p=${p.id}"${p.id === period ? ' aria-current="page"' : ''}>${p.label}</a>`).join('')}</nav>`;
-  const head = `<header><h1>Workspace on Cloudflare</h1><span class="who">Signed in as ${esc(email)}</span></header>${nav}`;
+  const head = `<h1>Workspace on Cloudflare</h1><div class="who">Signed in as ${esc(email)}</div>${nav}`;
   if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID) {
     return page('Workspace ops', `${head}<p class="err">This page has no Cloudflare API token to read analytics with yet. Add a token with <b>Account Analytics: Read</b> as the secret <code>CF_API_TOKEN</code> on the <code>workspace-ops</code> worker.</p>`);
   }
@@ -153,12 +215,11 @@ export async function render(env: Env, email: string, period: Period, now: Date,
   const inPeriod = days.filter((d) => d.date >= range.start && d.date <= range.end);
   const inMonth = days.filter((d) => d.date >= month.start);
   const today = days.find((d) => d.date === month.end);
-  const label = PERIODS.find((p) => p.id === period)!.label;
+  const fns = sumByFunction(inPeriod);
+  const monthCost = paidCost(totals(inMonth.flatMap((d) => d.functions))).usage;
   return page(
     'Workspace ops',
-    `${head}<h2>${label}: by service</h2>${functionsTable(sumByFunction(inPeriod))}
-<p class="note">Sent is response bytes as Cloudflare reports them; it reports no bytes received, and WebSocket traffic only as message counts.</p>
-${byDay(inPeriod)}${costSection(inMonth, today)}`,
+    `${head}${tiles(fns, monthCost)}<h2>By service</h2>${serviceCards(fns)}${byDay(inPeriod)}${costSection(inMonth, today)}`,
   );
 }
 

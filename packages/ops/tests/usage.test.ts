@@ -66,9 +66,11 @@ test('the page shows each service and the month’s cost, and asks for a token w
   const html = await (await render(env, 'leslie@workspace.sh', 'month', new Date('2026-11-20T19:00:00Z'), fakeFetch)).text();
   assert.equal(asked!.auth, 'Bearer t');
   assert.deepEqual(asked!.vars, { a: 'acct', s: '2026-11-01', e: '2026-11-20' });
-  assert.match(html, /workspace-relay/);
-  assert.match(html, /Durable Objects/);
-  assert.match(html, /\$5\.00/);
+  assert.match(html, /Relay · Front door/);
+  assert.doesNotMatch(html, /workspace-relay|__unknown__/);
+  assert.match(html, /Meeting rooms/);
+  assert.match(html, /Relay/);
+  assert.match(html, /With the \$5 Workers Paid plan/);
   assert.match(html, /Signed in as leslie@workspace\.sh/);
   const none = await (await render({ ...env, CF_API_TOKEN: undefined }, 'leslie@workspace.sh', 'today', new Date())).text();
   assert.match(none, /no Cloudflare API token/);
