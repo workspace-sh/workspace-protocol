@@ -9,6 +9,8 @@ import {
   CLOSE,
   DEFAULT_LIMITS,
   PAIRED,
+  PING,
+  PONG,
   PROTOCOL_VERSION,
   admit,
   deadlineFor,
@@ -48,6 +50,8 @@ export interface RelayServer {
 interface Member {
   ws: WebSocket;
   side: Side;
+  /** When this side last sent a heartbeat, or null if it never has. */
+  pingedAt: number | null;
   timer: ReturnType<typeof setTimeout> | null;
 }
 
@@ -84,7 +88,7 @@ export async function startRelayServer(opts: RelayServerOptions = {}): Promise<R
 
   const schedule = (m: Member) => {
     if (m.timer) clearTimeout(m.timer);
-    const d = deadlineFor(m.side, limits);
+    const d = deadlineFor(m.side, limits, m.pingedAt);
     m.timer = setTimeout(() => m.ws.close(d.code, d.reason), Math.max(0, d.at - Date.now()));
     m.timer.unref?.();
   };
@@ -128,7 +132,7 @@ export async function startRelayServer(opts: RelayServerOptions = {}): Promise<R
       });
 
       const now = Date.now();
-      const me: Member = { ws, side: newSide(now), timer: null };
+      const me: Member = { ws, side: newSide(now), pingedAt: null, timer: null };
       list.push(me);
       meetings.set(key, list);
 
@@ -143,6 +147,12 @@ export async function startRelayServer(opts: RelayServerOptions = {}): Promise<R
       }
 
       ws.on('message', (data: RawData, isBinary: boolean) => {
+        if (!isBinary && !Array.isArray(data) && (data as Buffer).byteLength === PING.length && data.toString() === PING) {
+          me.pingedAt = Date.now();
+          ws.send(PONG);
+          schedule(me);
+          return;
+        }
         const peers = meetings.get(key) ?? [];
         const total = peers.reduce((n, m) => n + m.side.bytes, 0);
         const size = Array.isArray(data) ? data.reduce((n, b) => n + b.length, 0) : (data as Buffer).byteLength;

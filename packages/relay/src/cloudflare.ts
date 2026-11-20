@@ -2,6 +2,9 @@
 // Durable Object. The object accepts both WebSockets with the hibernation
 // API, so an idle meeting costs nothing while it waits, and keeps each
 // side's state in the socket's attachment so it survives hibernation.
+// Heartbeats are answered by Cloudflare itself (an auto-response), so a
+// device's pings never wake the object; the alarm reads when each side last
+// pinged and lets a silent one go.
 //
 // The free plan allows only SQLite-backed Durable Objects, which is what
 // wrangler.toml declares (`new_sqlite_classes`). The relay stores nothing.
@@ -11,6 +14,8 @@ import { Hono } from 'hono';
 import {
   CLOSE,
   PAIRED,
+  PING,
+  PONG,
   PROTOCOL_VERSION,
   admit,
   deadlineFor,
@@ -28,6 +33,7 @@ export interface Env {
   RELAY_MAX_FRAME_BYTES?: string;
   RELAY_MAX_MEETING_BYTES?: string;
   RELAY_MAX_MEETING_MS?: string;
+  RELAY_SILENCE_MS?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -51,6 +57,7 @@ export class Meeting extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     this.limits = limitsFrom(env as unknown as Record<string, unknown>);
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(PING, PONG));
   }
 
   private open(): WebSocket[] {
@@ -61,10 +68,17 @@ export class Meeting extends DurableObject<Env> {
     return ws.deserializeAttachment() as Side;
   }
 
+  private deadlineOf(ws: WebSocket) {
+    const pinged = this.ctx.getWebSocketAutoResponseTimestamp(ws);
+    return deadlineFor(this.sideOf(ws), this.limits, pinged ? pinged.getTime() : null);
+  }
+
   private async scheduleAlarm(): Promise<void> {
-    const deadlines = this.open().map((ws) => deadlineFor(this.sideOf(ws), this.limits).at);
+    const deadlines = this.open().map((ws) => this.deadlineOf(ws).at);
     if (deadlines.length === 0) return void (await this.ctx.storage.deleteAlarm());
-    await this.ctx.storage.setAlarm(Math.min(...deadlines));
+    // Pings never wake the object, so it cannot tell when a side starts or
+    // stops sending them: it looks again at least once per silence limit.
+    await this.ctx.storage.setAlarm(Math.min(...deadlines, Date.now() + this.limits.silenceMs));
   }
 
   override async fetch(_req: Request): Promise<Response> {
@@ -116,7 +130,7 @@ export class Meeting extends DurableObject<Env> {
   override async alarm(): Promise<void> {
     const now = Date.now();
     for (const ws of this.open()) {
-      const d = deadlineFor(this.sideOf(ws), this.limits);
+      const d = this.deadlineOf(ws);
       if (d.at <= now) this.end(ws, d.code, d.reason);
     }
     await this.scheduleAlarm();

@@ -4,13 +4,14 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
-import { CLOSE, PAIRED, type Limits } from '../src/core.ts';
+import { CLOSE, PAIRED, PING, PONG, type Limits } from '../src/core.ts';
 
 export const TEST_LIMITS: Limits = {
   waitMs: 800,
   maxFrameBytes: 64 * 1024,
   maxMeetingBytes: 256 * 1024,
   maxMeetingMs: 60_000,
+  silenceMs: 1_500,
 };
 
 interface Client {
@@ -19,6 +20,10 @@ interface Client {
   paired: Promise<void>;
   closed: Promise<{ code: number; reason: string }>;
   next(): Promise<Uint8Array>;
+  /** Sends a heartbeat and resolves on the relay's answer. */
+  ping(): Promise<void>;
+  /** Text frames other than `paired` and `pong`. */
+  texts: string[];
 }
 
 function connect(url: string): Client {
@@ -28,9 +33,13 @@ function connect(url: string): Client {
   const waiting: ((b: Uint8Array) => void)[] = [];
   let onPaired!: () => void;
   const paired = new Promise<void>((r) => (onPaired = r));
+  const pongs: (() => void)[] = [];
+  const texts: string[] = [];
   ws.addEventListener('message', (e) => {
     if (typeof e.data === 'string') {
       if (e.data === PAIRED) onPaired();
+      else if (e.data === PONG) pongs.shift()?.();
+      else texts.push(e.data);
       return;
     }
     const bytes = new Uint8Array(e.data as ArrayBuffer);
@@ -50,6 +59,12 @@ function connect(url: string): Client {
       const b = inbox.shift();
       return b ? Promise.resolve(b) : new Promise((r) => waiting.push(r));
     },
+    ping: () =>
+      new Promise<void>((r) => {
+        pongs.push(r);
+        ws.send(PING);
+      }),
+    texts,
   };
 }
 
@@ -150,6 +165,53 @@ export function relaySuite(name: string, start: () => Promise<{ url: string; clo
       await a.opened;
       const { code } = await within(a.closed, TEST_LIMITS.waitMs + CLOSE_WAIT_MS, 'wait limit');
       assert.equal(code, CLOSE.NO_PEER);
+    });
+
+    it('answers a heartbeat before and after pairing, and passes none on', async () => {
+      const key = newKey();
+      const a = connect(`${base}/v1/pair/${key}`);
+      await within(a.opened, 5000, 'open');
+      await within(a.ping(), 3000, 'pong before pairing');
+      const b = connect(`${base}/v1/pair/${key}`);
+      await within(Promise.all([a.paired, b.paired]), 5000, 'paired');
+      await within(a.ping(), 3000, 'pong after pairing');
+      a.ws.send(new Uint8Array([7]));
+      assert.deepEqual([...(await within(b.next(), 3000, 'b receives'))], [7]);
+      assert.deepEqual(b.texts, []);
+      a.ws.close();
+      await b.closed;
+    });
+
+    it('lets a device go once its heartbeat stops, and closes its peer', async () => {
+      const [a, b] = await pair(base);
+      await a.ping();
+      // b keeps its heartbeat; a, like a phone that lost its network, stops.
+      const beat = setInterval(() => void b.ping().catch(() => {}), 300);
+      try {
+        const started = Date.now();
+        const gone = await within(a.closed, TEST_LIMITS.silenceMs + CLOSE_WAIT_MS, 'silent side closed');
+        assert.equal(gone.code, CLOSE.SILENT);
+        assert.ok(Date.now() - started >= TEST_LIMITS.silenceMs - 200, 'not before the silence limit');
+        assert.equal((await within(b.closed, CLOSE_WAIT_MS, 'peer closed')).code, CLOSE.PEER_LEFT);
+      } finally {
+        clearInterval(beat);
+      }
+    });
+
+    it('keeps a device that keeps its heartbeat, and one that never sends one', async () => {
+      const [a, b] = await pair(base);
+      const beat = setInterval(() => void a.ping().catch(() => {}), 300);
+      try {
+        await new Promise((r) => setTimeout(r, TEST_LIMITS.silenceMs * 2));
+        a.ws.send(new Uint8Array([1]));
+        b.ws.send(new Uint8Array([2]));
+        assert.deepEqual([...(await within(b.next(), 3000, 'b receives'))], [1]);
+        assert.deepEqual([...(await within(a.next(), 3000, 'a receives'))], [2]);
+      } finally {
+        clearInterval(beat);
+      }
+      a.ws.close();
+      await b.closed;
     });
 
     it('closes on a frame over the limit', async () => {
