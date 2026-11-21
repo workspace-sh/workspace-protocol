@@ -1,0 +1,6 @@
+# wrangler's local state (Durable Object storage, caches, logs)
+.wrangler/
+# local secrets for `wrangler dev`; never commit these
+.dev.vars
+.dev.vars.*
+.env*

@@ -15,9 +15,14 @@
   "scripts": {
     "build": "npm --workspaces --if-present run build",
     "typecheck": "npm --workspaces --if-present run typecheck",
-    "test": "npm --workspaces --if-present run test"
+    "test": "npm --workspaces --if-present run test",
+    "prepare": "git config core.hooksPath scripts/hooks || true"
   },
   "devDependencies": {
     "typescript": "^5.6.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261113.1": true
   }
 }
