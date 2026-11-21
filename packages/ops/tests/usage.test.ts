@@ -57,13 +57,13 @@ test('periods run in UTC days', () => {
 });
 
 test('the page shows each service and the month’s cost, and asks for a token when it has none', async () => {
-  const env = { ACCESS_TEAM_DOMAIN: 'x', ACCESS_AUD: 'a', ALLOWED_EMAIL: 'leslie@workspace.sh', CF_API_TOKEN: 't', CF_ACCOUNT_ID: 'acct' };
+  const env = { ACCESS_TEAM_DOMAIN: 'x', ACCESS_AUD: 'a', ALLOWED_EMAIL: 'person@example.com', CF_API_TOKEN: 't', CF_ACCOUNT_ID: 'acct' };
   let asked: { auth: string | null; vars: Record<string, string> } | null = null;
   const fakeFetch = (async (_url: string, init: RequestInit) => {
     asked = { auth: new Headers(init.headers).get('authorization'), vars: JSON.parse(String(init.body)).variables };
     return Response.json({ data: { viewer: { accounts: [raw] } }, errors: null });
   }) as typeof fetch;
-  const html = await (await render(env, 'leslie@workspace.sh', 'month', new Date('2026-11-20T19:00:00Z'), fakeFetch)).text();
+  const html = await (await render(env, 'person@example.com', 'month', new Date('2026-11-20T19:00:00Z'), fakeFetch)).text();
   assert.equal(asked!.auth, 'Bearer t');
   assert.deepEqual(asked!.vars, { a: 'acct', s: '2026-11-01', e: '2026-11-20' });
   assert.match(html, /Relay · Front door/);
@@ -73,9 +73,9 @@ test('the page shows each service and the month’s cost, and asks for a token w
   assert.match(html, /Projected this month/);
   assert.match(html, /Devices connected/);
   assert.match(html, /id="currency"/);
-  const free = await (await render(env, "leslie@workspace.sh", "today", new Date("2026-11-20T19:00:00Z"), fakeFetch, "free")).text();
+  const free = await (await render(env, "person@example.com", "today", new Date("2026-11-20T19:00:00Z"), fakeFetch, "free")).text();
   assert.match(free, /Busiest allowance today/);
-  assert.match(html, /Signed in as leslie@workspace\.sh/);
-  const none = await (await render({ ...env, CF_API_TOKEN: undefined }, 'leslie@workspace.sh', 'today', new Date())).text();
+  assert.match(html, /Signed in as person@example\.com/);
+  const none = await (await render({ ...env, CF_API_TOKEN: undefined }, 'person@example.com', 'today', new Date())).text();
   assert.match(none, /no Cloudflare API token/);
 });
