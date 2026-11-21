@@ -267,7 +267,12 @@ function costSection(month: DayUsage[], today: DayUsage | undefined, plan: Plan,
   }
   const now$ = paidCost(sofar);
   const end$ = paidCost(projected);
+  const worst = Math.max(...freeShare(totals(today?.functions ?? [])).map((r) => r.share));
   const blocks = [
+    blockHtml(
+      { label: 'Free tier today', value: pct(worst), state: worst >= 1 ? 'watch' : worst >= 0.8 ? 'watch' : 'good', word: worst >= 1 ? 'Past it' : worst >= 0.8 ? 'Near it' : 'Within it' },
+      `<div class="meter"><i class="${worst >= 0.8 ? 'watch' : ''}" style="width:${Math.min(100, worst * 100).toFixed(1)}%"></i></div>`,
+    ),
     blockHtml({ label: 'Projected this month', value: money(end$.withFee), state: end$.usage > 0 ? 'watch' : 'good', word: end$.usage > 0 ? 'Over plan' : 'Within plan' }),
     blockHtml({ label: 'So far this month', value: money(now$.withFee), state: 'normal', word: 'To date' }),
     blockHtml({ label: 'Plan fee', value: money(5), state: 'normal', word: 'Fixed' }),
@@ -281,6 +286,7 @@ function costSection(month: DayUsage[], today: DayUsage | undefined, plan: Plan,
     }),
   ].join('');
   return `${head}<div class="blocks">${blocks}</div>${meanings([
+    { label: 'Free tier today', meaning: "How much of the free plan's daily allowance today's use would take, counting its fullest part. Under 100% means today would have cost nothing on the free plan." },
     { label: 'Projected this month', meaning: 'What the month will cost if the rest of it goes like the days so far: the $5 fee plus any use beyond what the plan includes.' },
     { label: 'Use beyond the plan', meaning: 'The $5 plan includes 10 million worker requests, 30 million CPU milliseconds, 1 million Durable Object requests and 400,000 GB-seconds of Durable Object time each month. Only use past those is charged.' },
     { label: 'Percentages', meaning: "How much of each included amount the month is projected to use." },
