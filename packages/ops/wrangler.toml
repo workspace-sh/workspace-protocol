@@ -1,0 +1,23 @@
+# The maintenance page. No account id or token lives here: the Cloudflare API
+# token the page reads analytics with is a secret (CF_API_TOKEN), set on the
+# worker, never in a file.
+name = "workspace-ops"
+main = "src/worker.ts"
+compatibility_date = "2026-11-01"
+
+[vars]
+# Cloudflare Access: the team domain whose login guards this page, the one
+# address let in, and the application's audience tag (set once the Access
+# application exists).
+ACCESS_TEAM_DOMAIN = "https://workspace-sh.cloudflareaccess.com"
+ALLOWED_EMAIL = "leslie@workspace.sh"
+ACCESS_AUD = "ce8286abb371dc54e7e83199523bad373c7740126fa970e717d7a94af374c942"
+
+[observability]
+enabled = false
+
+# The relay's daily totals of how meetings ended, read through its object.
+[[durable_objects.bindings]]
+name = "TOTALS"
+class_name = "Totals"
+script_name = "workspace-relay"
