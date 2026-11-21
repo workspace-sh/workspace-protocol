@@ -1,0 +1,60 @@
+# gitleaks's default rules, plus Workspace's own bearer secrets.
+# Rule regexes use non-capturing groups unless secretGroup is set: with a
+# capturing group, gitleaks treats that group as the finding.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "workspace-invite-link"
+description = "An invite secret (#invite=..., also URL-encoded), a bearer secret"
+regex = '''(?i)(?:#|%23)invite(?:=|%3D)[a-z0-9]{20,}'''
+keywords = ["invite"]
+
+[[rules]]
+id = "cloudflare-api-token-assignment"
+description = "A Cloudflare API token set in a file"
+regex = '''(?i)CLOUDFLARE_API_TOKEN\s*[=:]\s*["']?[A-Za-z0-9_\-]{30,}'''
+keywords = ["cloudflare_api_token"]
+
+# Personal information. Public repositories carry no one's address, phone
+# number or home directory; examples use example.com and placeholder names.
+
+[[rules]]
+id = "pii-email-address"
+description = "An email address"
+regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}'''
+keywords = ["@"]
+[[rules.allowlists]]
+regexes = [
+  '''(?i)^noreply@''',
+  '''(?i)@noreply\.''',
+  '''(?i)@users\.noreply\.github\.com$''',
+  '''(?i)@example\.(com|org|net)$''',
+  '''(?i)^git@(github|gitlab)\.com$''',
+]
+paths = ['''(^|/)package-lock\.json$''', '''(^|/)node_modules/''']
+
+[[rules]]
+id = "pii-phone-number"
+description = "An international phone number"
+regex = '''\+[1-9][0-9]{0,2}[ .-]?[0-9]{2,4}[ .-]?[0-9]{3,4}[ .-]?[0-9]{3,4}\b'''
+keywords = ["+"]
+[[rules.allowlists]]
+paths = ['''(^|/)package-lock\.json$''']
+
+[[rules]]
+id = "pii-home-directory"
+description = "A path inside someone's home directory"
+# The finding is the username alone: gitleaks's default allowlist drops any
+# finding that is a whole /home/... or /Users/... path.
+regex = '''(?i)(?:/(?:home|Users)/|[A-Z]:\\Users\\)([a-z][a-z0-9_.-]+)[/\\]'''
+secretGroup = 1
+keywords = ["/home/", "/users/", "\\users\\"]
+[[rules.allowlists]]
+regexes = ['''(?i)^(?:user|runner|me|you|name|example|username)$''']
+
+[[rules]]
+id = "claude-session-url"
+description = "A Claude session link"
+regex = '''claude\.ai/code/session_[A-Za-z0-9]+'''
+keywords = ["claude.ai/code/session_"]
