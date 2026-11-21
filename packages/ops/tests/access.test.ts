@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { verifyAccess, type AccessConfig } from '../src/access.ts';
 
-const cfg: AccessConfig = { teamDomain: 'https://team.cloudflareaccess.com', aud: 'aud-1', allowedEmail: 'leslie@workspace.sh' };
+const cfg: AccessConfig = { teamDomain: 'https://team.cloudflareaccess.com', aud: 'aud-1', allowedEmail: 'person@example.com' };
 const b64url = (b: Uint8Array | string) => Buffer.from(b).toString('base64url');
 
 async function keys() {
@@ -23,11 +23,11 @@ async function sign(pair: CryptoKeyPair, payload: Record<string, unknown>, kid =
 }
 
 const now = 1_800_000_000_000;
-const good = { aud: ['aud-1'], iss: 'https://team.cloudflareaccess.com', email: 'Leslie@workspace.sh', exp: now / 1000 + 600 };
+const good = { aud: ['aud-1'], iss: 'https://team.cloudflareaccess.com', email: 'person@example.com', exp: now / 1000 + 600 };
 
 test('lets in the allowed address with a valid token', async () => {
   const { pair, fetchKeys } = await keys();
-  assert.deepEqual(await verifyAccess(await sign(pair, good), cfg, { now, fetchKeys }), { ok: true, email: 'Leslie@workspace.sh' });
+  assert.deepEqual(await verifyAccess(await sign(pair, good), cfg, { now, fetchKeys }), { ok: true, email: 'person@example.com' });
 });
 
 test('refuses anyone else, another application, another issuer, an old token, or none', async () => {
@@ -45,7 +45,7 @@ test('refuses a token changed after signing, or signed by another key', async ()
   const { pair, fetchKeys } = await keys();
   const token = await sign(pair, good);
   const [h, , s] = token.split('.');
-  const forged = `${h}.${b64url(JSON.stringify({ ...good, email: 'leslie@workspace.sh', exp: good.exp + 1 }))}.${s}`;
+  const forged = `${h}.${b64url(JSON.stringify({ ...good, email: 'person@example.com', exp: good.exp + 1 }))}.${s}`;
   assert.equal((await verifyAccess(forged, cfg, { now, fetchKeys })).ok, false);
   const other = await keys();
   assert.equal((await verifyAccess(await sign(other.pair, good), cfg, { now, fetchKeys })).ok, false);
