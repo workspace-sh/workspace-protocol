@@ -1,7 +1,7 @@
 # The Cloudflare adapter. No account id or token lives here: wrangler reads
 # CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN from the environment, or
 # from `wrangler login`.
-name = "workspace-relay"
+name = "relay"
 main = "src/cloudflare.ts"
 compatibility_date = "2026-11-01"
 

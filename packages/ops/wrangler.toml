@@ -1,7 +1,7 @@
 # The maintenance page. No account id or token lives here: the Cloudflare API
 # token the page reads analytics with is a secret (CF_API_TOKEN), set on the
 # worker, never in a file.
-name = "workspace-ops"
+name = "operations"
 main = "src/worker.ts"
 compatibility_date = "2026-11-01"
 
@@ -18,4 +18,4 @@ enabled = false
 [[durable_objects.bindings]]
 name = "TOTALS"
 class_name = "Totals"
-script_name = "workspace-relay"
+script_name = "relay"
