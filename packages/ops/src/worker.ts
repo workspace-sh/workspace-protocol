@@ -64,11 +64,16 @@ const pct = (s: number) => `${(s * 100).toFixed(s < 0.01 ? 2 : 1)}%`;
 
 /** What each service is, in words, for a reader who didn't build it. */
 const SERVICES: Record<string, { label: string; role: string }> = {
-  'workspace-relay': {
+  relay: {
     label: 'Relay',
     role: "Pairs two devices that can't reach each other directly and passes their encrypted traffic, unread.",
   },
-  'workspace-ops': { label: 'This dashboard', role: 'This page.' },
+  'workspace-relay': {
+    label: 'Relay, old address',
+    role: 'Passes connections from apps that still use the relay’s first address on to the relay.',
+  },
+  operations: { label: 'This dashboard', role: 'This page.' },
+  'workspace-ops': { label: 'This dashboard, old name', role: 'This page, before it was renamed.' },
   __unknown__: {
     label: 'Not tied to a service',
     role: "Requests Cloudflare couldn't attribute to a worker, such as calls to an address while a worker was being replaced.",
@@ -312,7 +317,7 @@ export async function render(env: Env, email: string, period: Period, now: Date,
   const nav = `<nav>${PERIODS.map((p) => `<a href="?p=${p.id}&plan=${plan}"${p.id === period ? ' aria-current="page"' : ''}>${p.label}</a>`).join('')}</nav>`;
   const head = `<h1>Workspace on Cloudflare</h1><div class="who">Signed in as ${esc(email)}</div>${nav}`;
   if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID) {
-    return page('Workspace ops', `${head}<p class="err">This page has no Cloudflare API token to read analytics with yet. Add a token with <b>Account Analytics: Read</b> as the secret <code>CF_API_TOKEN</code> on the <code>workspace-ops</code> worker.</p>`);
+    return page('Workspace ops', `${head}<p class="err">This page has no Cloudflare API token to read analytics with yet. Add a token with <b>Account Analytics: Read</b> as the secret <code>CF_API_TOKEN</code> on the <code>operations</code> worker.</p>`);
   }
   // One fetch covers every view: the month so far, and the last seven days.
   const month = rangeFor('month', now);

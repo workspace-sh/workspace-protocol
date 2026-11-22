@@ -5,10 +5,10 @@ import { render, rangeFor } from '../src/worker.ts';
 
 const raw = {
   w: [
-    { sum: { requests: 1167, errors: 0, cpuTimeUs: 995_847, responseBodySize: 2_326_752 }, dimensions: { scriptName: 'workspace-relay', date: '2026-11-20' } },
-    { sum: { requests: 13, errors: 1, cpuTimeUs: 13_000, responseBodySize: 1000 }, dimensions: { scriptName: 'workspace-relay', date: '2026-11-17' } },
+    { sum: { requests: 1167, errors: 0, cpuTimeUs: 995_847, responseBodySize: 2_326_752 }, dimensions: { scriptName: 'relay', date: '2026-11-20' } },
+    { sum: { requests: 13, errors: 1, cpuTimeUs: 13_000, responseBodySize: 1000 }, dimensions: { scriptName: 'relay', date: '2026-11-17' } },
   ],
-  di: [{ sum: { requests: 4339, errors: 2, responseBodySize: 4_000 }, dimensions: { scriptName: 'workspace-relay', date: '2026-11-20' } }],
+  di: [{ sum: { requests: 4339, errors: 2, responseBodySize: 4_000 }, dimensions: { scriptName: 'relay', date: '2026-11-20' } }],
   dp: [
     {
       sum: { activeTime: 2_696_340_575, cpuTime: 1_704_516, inboundWebsocketMsgCount: 400, outboundWebsocketMsgCount: 2017 },
@@ -21,7 +21,7 @@ test('each worker and its objects are one row a day, with duration billed at 128
   const days = fromRaw(raw);
   assert.deepEqual(days.map((d) => d.date), ['2026-11-17', '2026-11-20']);
   const objects = days[1]!.functions.find((f) => f.kind === 'durable-object')!;
-  assert.equal(objects.name, 'workspace-relay');
+  assert.equal(objects.name, 'relay');
   assert.equal(objects.requests, 4339);
   assert.equal(Math.round(objects.gbSeconds), Math.round(2696.340575 * 0.125));
   assert.equal(objects.wsOut, 2017);
@@ -67,7 +67,7 @@ test('the page shows each service and the month’s cost, and asks for a token w
   assert.equal(asked!.auth, 'Bearer t');
   assert.deepEqual(asked!.vars, { a: 'acct', s: '2026-11-01', e: '2026-11-20' });
   assert.match(html, /Relay · Front door/);
-  assert.doesNotMatch(html, /workspace-relay|__unknown__/);
+  assert.doesNotMatch(html, />relay<|__unknown__/);
   assert.match(html, /Meeting rooms/);
   assert.match(html, /Relay/);
   assert.match(html, /Projected this month/);
