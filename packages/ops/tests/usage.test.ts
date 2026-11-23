@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fromRaw, paidCost, freeShare, sumByFunction, totals } from '../src/usage.ts';
-import { render, rangeFor } from '../src/worker.ts';
+import { usage } from '../src/worker.ts';
+import { rangeFor, view, type Data } from '../src/view.ts';
 
 const raw = {
   w: [
@@ -56,26 +57,36 @@ test('periods run in UTC days', () => {
   assert.deepEqual(rangeFor('month', now), { start: '2026-11-01', end: '2026-11-03' });
 });
 
-test('the page shows each service and the month’s cost, and asks for a token when it has none', async () => {
+test('the worker answers once with every view’s numbers, and the page draws each view from that answer', async () => {
   const env = { ACCESS_TEAM_DOMAIN: 'x', ACCESS_AUD: 'a', ALLOWED_EMAIL: 'person@example.com', CF_API_TOKEN: 't', CF_ACCOUNT_ID: 'acct' };
   let asked: { auth: string | null; vars: Record<string, string> } | null = null;
+  let calls = 0;
   const fakeFetch = (async (_url: string, init: RequestInit) => {
+    calls++;
     asked = { auth: new Headers(init.headers).get('authorization'), vars: JSON.parse(String(init.body)).variables };
     return Response.json({ data: { viewer: { accounts: [raw] } }, errors: null });
   }) as typeof fetch;
-  const html = await (await render(env, 'person@example.com', 'month', new Date('2026-11-20T19:00:00Z'), fakeFetch)).text();
+  const r = await usage(env, 'person@example.com', new Date('2026-11-20T19:00:00Z'), fakeFetch);
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('cache-control')!, /private, max-age=\d+/);
+  const data = (await r.json()) as Data;
   assert.equal(asked!.auth, 'Bearer t');
   assert.deepEqual(asked!.vars, { a: 'acct', s: '2026-11-01', e: '2026-11-20' });
+  const html = view(data, 'month', 'paid');
   assert.match(html, /Relay · Front door/);
   assert.doesNotMatch(html, />relay<|__unknown__/);
   assert.match(html, /Meeting rooms/);
-  assert.match(html, /Relay/);
   assert.match(html, /Projected this month/);
   assert.match(html, /Devices connected/);
   assert.match(html, /id="currency"/);
-  const free = await (await render(env, "person@example.com", "today", new Date("2026-11-20T19:00:00Z"), fakeFetch, "free")).text();
-  assert.match(free, /Busiest allowance today/);
   assert.match(html, /Signed in as person@example\.com/);
-  const none = await (await render({ ...env, CF_API_TOKEN: undefined }, 'person@example.com', 'today', new Date())).text();
-  assert.match(none, /no Cloudflare API token/);
+  assert.match(html, /data-period="month" aria-pressed="true"/);
+  const free = view(data, 'today', 'free');
+  assert.match(free, /Busiest allowance today/);
+  assert.match(free, /data-plan="free" aria-pressed="true"/);
+  assert.equal(calls, 1);
+  const none = await usage({ ...env, CF_API_TOKEN: undefined }, 'person@example.com', new Date());
+  assert.equal(none.status, 503);
+  assert.match(((await none.json()) as { error: string }).error, /no Cloudflare API token/);
 });
+
