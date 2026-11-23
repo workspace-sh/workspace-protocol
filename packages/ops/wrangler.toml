@@ -2,14 +2,20 @@
 # token the page reads analytics with is a secret (CF_API_TOKEN), set on the
 # worker, never in a file.
 name = "operations"
-main = "src/worker.ts"
+main = "src/entry.ts"
+compatibility_date = "2026-11-01"
 
 # The page is a static asset (built by `npm run build`): serving it runs no
 # worker and costs nothing. Only the numbers, at /api/usage, run the worker.
+# Deployed without its assets, the worker hands out the same page (src/entry.ts).
 [assets]
 directory = "dist"
 run_worker_first = ["/api/*"]
-compatibility_date = "2026-11-01"
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
 
 [vars]
 # Cloudflare Access: the team domain whose login guards this page. The one
