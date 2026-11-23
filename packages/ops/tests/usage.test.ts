@@ -90,3 +90,18 @@ test('the worker answers once with every view’s numbers, and the page draws ea
   assert.match(((await none.json()) as { error: string }).error, /no Cloudflare API token/);
 });
 
+
+test('a namespace is one service with the worker its requests name, whatever its label says', () => {
+  const days = fromRaw(
+    {
+      w: [{ sum: { requests: 10, errors: 0, cpuTimeUs: 5000, responseBodySize: 100 }, dimensions: { scriptName: 'relay', date: '2026-11-22' } }],
+      di: [{ sum: { requests: 900, errors: 3, responseBodySize: 4000 }, dimensions: { scriptName: 'relay', namespaceId: 'ns1', date: '2026-11-22' } }],
+      dp: [{ sum: { activeTime: 8_000_000, cpuTime: 1000, inboundWebsocketMsgCount: 5, outboundWebsocketMsgCount: 7 }, dimensions: { namespaceId: 'ns1', date: '2026-11-22' } }],
+    },
+    // A label left from before the rename: the namespace's own requests name its worker.
+    { ns1: 'some-old-name' },
+  );
+  const rooms = sumByFunction(days).filter((f) => f.kind === 'durable-object');
+  assert.equal(rooms.length, 1);
+  assert.deepEqual({ name: rooms[0]!.name, requests: rooms[0]!.requests, errors: rooms[0]!.errors, wsOut: rooms[0]!.wsOut, gbSeconds: rooms[0]!.gbSeconds }, { name: 'relay', requests: 900, errors: 3, wsOut: 7, gbSeconds: 1 });
+});
