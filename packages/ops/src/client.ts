@@ -5,7 +5,8 @@ import { problem, view, type Data, type Period, type Plan } from './view.ts';
 
 const main = document.querySelector('main')!;
 const query = new URLSearchParams(location.search);
-let period: Period = ((p) => (p === 'month' || p === '7d' ? p : 'today'))(query.get('p'));
+// It always opens on today: a period chosen lasts while the page is open, and an address saved with one (a home-screen icon) doesn't keep it.
+let period: Period = 'today';
 let plan: Plan = query.get('plan') === 'free' ? 'free' : 'paid';
 let data: Data | undefined;
 let failure: string | undefined;
@@ -50,7 +51,7 @@ main.addEventListener('click', (event) => {
   if (p) period = p;
   else if (pl) plan = pl;
   else return;
-  history.replaceState(null, '', `?p=${period}&plan=${plan}`);
+  history.replaceState(null, '', `?plan=${plan}`);
   draw();
 });
 
