@@ -198,7 +198,7 @@ export const PERIODS: { id: Period; label: string }[] = [
 
 export function header(email: string | undefined, period: Period): string {
   const nav = `<nav>${PERIODS.map((p) => `<button type="button" data-period="${p.id}"${p.id === period ? ' aria-pressed="true"' : ' aria-pressed="false"'}>${p.label}</button>`).join('')}</nav>`;
-  return `<h1>Workspace on Cloudflare</h1><div class="who">${email ? `Signed in as ${esc(email)}` : '&nbsp;'}</div>${nav}`;
+  return `<h1>Workspace Operations</h1><div class="who">${email ? `Signed in as ${esc(email)}` : '&nbsp;'}</div>${nav}`;
 }
 
 /** The whole page for `period` and `plan`, from `data`. */
