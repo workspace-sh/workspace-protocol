@@ -128,7 +128,7 @@ const QUERY = `query Usage($a: String!, $s: Date!, $e: Date!) {
       sum { requests errors cpuTimeUs responseBodySize } dimensions { scriptName date }
     }
     di: durableObjectsInvocationsAdaptiveGroups(limit: 10000, filter: { date_geq: $s, date_leq: $e }) {
-      sum { requests errors responseBodySize } dimensions { scriptName date }
+      sum { requests errors responseBodySize } dimensions { scriptName namespaceId date }
     }
     dp: durableObjectsPeriodicGroups(limit: 10000, filter: { date_geq: $s, date_leq: $e }) {
       sum { activeTime cpuTime inboundWebsocketMsgCount outboundWebsocketMsgCount } dimensions { namespaceId date }
@@ -138,12 +138,18 @@ const QUERY = `query Usage($a: String!, $s: Date!, $e: Date!) {
 
 interface Raw {
   w: { sum: { requests: number; errors: number; cpuTimeUs: number; responseBodySize: number }; dimensions: { scriptName: string; date: string } }[];
-  di: { sum: { requests: number; errors: number; responseBodySize: number }; dimensions: { scriptName: string; date: string } }[];
+  di: { sum: { requests: number; errors: number; responseBodySize: number }; dimensions: { scriptName: string; namespaceId?: string; date: string } }[];
   dp: {
     sum: { activeTime: number; cpuTime: number; inboundWebsocketMsgCount: number; outboundWebsocketMsgCount: number };
     dimensions: { namespaceId: string; date: string };
   }[];
 }
+
+/**
+ * Workers renamed since they first ran. Cloudflare keeps reporting some of a
+ * renamed worker's analytics under its first name, so both names count as one.
+ */
+export const RENAMED: Record<string, string> = { 'workspace-relay': 'relay', 'workspace-ops': 'operations' };
 
 /** Turns the three analytics groups into per-day usage, keyed by namespace id in `labels`. */
 export function fromRaw(raw: Raw, labels: Record<string, string> = {}): DayUsage[] {
@@ -151,6 +157,7 @@ export function fromRaw(raw: Raw, labels: Record<string, string> = {}): DayUsage
   const get = (date: string, kind: FunctionUsage['kind'], name: string): FunctionUsage => {
     let d = days.get(date);
     if (!d) days.set(date, (d = new Map()));
+    name = RENAMED[name] ?? name;
     const key = `${kind}:${name}`;
     let f = d.get(key);
     if (!f) d.set(key, (f = { kind, name, requests: 0, errors: 0, cpuMs: 0, gbSeconds: 0, wsIn: 0, wsOut: 0, bytesOut: 0 }));
@@ -163,9 +170,12 @@ export function fromRaw(raw: Raw, labels: Record<string, string> = {}): DayUsage
     f.cpuMs += r.sum.cpuTimeUs / 1000;
     f.bytesOut += r.sum.responseBodySize;
   }
-  // Requests and response bytes are counted by script; duration and messages
-  // by namespace. A namespace is shown under its script's name: from `labels`,
-  // or the one script with Durable Objects when there is only one.
+  // Requests and response bytes are reported with both the script and the
+  // namespace; duration and messages with the namespace alone. So each
+  // namespace is shown under the script its requests name, and `labels`
+  // only names a namespace that had no requests in the period.
+  const scriptOf = new Map<string, string>();
+  for (const r of raw.di) if (r.dimensions.namespaceId) scriptOf.set(r.dimensions.namespaceId, r.dimensions.scriptName);
   const doScripts = new Set(raw.di.map((r) => r.dimensions.scriptName));
   const only = doScripts.size === 1 ? [...doScripts][0]! : null;
   for (const r of raw.di) {
@@ -176,7 +186,7 @@ export function fromRaw(raw: Raw, labels: Record<string, string> = {}): DayUsage
   }
   for (const r of raw.dp) {
     const id = r.dimensions.namespaceId;
-    const f = get(r.dimensions.date, 'durable-object', labels[id] ?? only ?? `namespace ${id.slice(0, 8)}`);
+    const f = get(r.dimensions.date, 'durable-object', scriptOf.get(id) ?? labels[id] ?? only ?? `namespace ${id.slice(0, 8)}`);
     f.cpuMs += r.sum.cpuTime / 1000;
     f.gbSeconds += (r.sum.activeTime / 1_000_000) * GB_PER_OBJECT;
     f.wsIn += r.sum.inboundWebsocketMsgCount;

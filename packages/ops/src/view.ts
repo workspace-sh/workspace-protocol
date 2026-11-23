@@ -47,13 +47,7 @@ const SERVICES: Record<string, { label: string; role: string }> = {
     label: 'Relay',
     role: "Pairs two devices that can't reach each other directly and passes their encrypted traffic, unread.",
   },
-  // Cloudflare's analytics keep reporting a renamed worker under its first name.
-  'workspace-relay': {
-    label: 'Relay',
-    role: "Pairs two devices that can't reach each other directly and passes their encrypted traffic, unread.",
-  },
   operations: { label: 'This dashboard', role: 'This page.' },
-  'workspace-ops': { label: 'This dashboard', role: 'This page.' },
   __unknown__: {
     label: 'Not tied to a service',
     role: "Requests Cloudflare couldn't attribute to a worker, such as calls to an address while a worker was being replaced.",
