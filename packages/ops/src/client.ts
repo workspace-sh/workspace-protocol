@@ -5,7 +5,7 @@ import { problem, view, type Data, type Period, type Plan } from './view.ts';
 
 const main = document.querySelector('main')!;
 const query = new URLSearchParams(location.search);
-let period: Period = ((p) => (p === 'today' || p === '7d' ? p : 'month'))(query.get('p'));
+let period: Period = ((p) => (p === 'month' || p === '7d' ? p : 'today'))(query.get('p'));
 let plan: Plan = query.get('plan') === 'free' ? 'free' : 'paid';
 let data: Data | undefined;
 let failure: string | undefined;
