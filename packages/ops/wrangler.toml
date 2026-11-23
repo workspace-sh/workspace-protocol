@@ -3,6 +3,12 @@
 # worker, never in a file.
 name = "operations"
 main = "src/worker.ts"
+
+# The page is a static asset (built by `npm run build`): serving it runs no
+# worker and costs nothing. Only the numbers, at /api/usage, run the worker.
+[assets]
+directory = "dist"
+run_worker_first = ["/api/*"]
 compatibility_date = "2026-11-01"
 
 [vars]
