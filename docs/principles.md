@@ -16,6 +16,11 @@ anywhere. Agents have cut the cost of building software, though not the
 cost of taste. This spec is an attempt to put those pieces together
 carefully, in the open, for anyone to use.
 
+It owes that work its standing, not only its code. The protocol is
+licensed as the projects it builds on are (Apache-2.0, beside their
+MIT), so anything here can flow back to them without asking. The file
+formats are MIT, so any app or company can adopt them without friction.
+
 ## Open, always
 
 The formats, this spec, and every service a workspace's structure
