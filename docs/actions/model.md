@@ -9,18 +9,20 @@ and WASI HTTP later. Highly likely, not decided.
 
 - `request`: what it's asked (the trigger's inputs: a row, a place name).
 - `env`: what it's been granted, and nothing else.
-  - `env/fetch`: GET to declared hosts.
+  - `env/fetch`: GET to declared hosts (POST proposed).
+  - `env/read`, `env/write`: files by relative path (`env/write` proposed).
   - `env/conn`: a named connection; the host attaches the credential.
   - `env/locate`, `env/now`.
   - `env/ask`: confirm or choose, on screen.
 - `ctx`: this run. The trigger, where in the document, who and which
-  device, locale, budget, the last kept value.
+  device, locale, its timeout, the last kept value.
 
-**Runs to completion.** A CPU budget in milliseconds; a few seconds of
-wall time only while waiting on a fetch; no state between runs.
+**Runs to completion,** like a serverless function: within a timeout
+its runner sets, with no state between runs. See [Running](./running.md).
 
 **Triggers.** Opening the document (`:on :open`, once per open), a tap,
-an edit nearby, a timer while the document is open. `:fresh` says how
+an edit nearby, a moment (`:at`) or a schedule (`:cron`); the
+[Reference](./reference.md#triggers) lists them. `:fresh` says how
 long a kept value is good for, so an open doesn't refetch what's fresh.
 Nothing runs unless the document declares it and the device grants it.
 

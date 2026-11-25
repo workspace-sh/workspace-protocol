@@ -68,7 +68,7 @@ not in any one document.
   when (decided).
 - Able to *show* a live value, or *keep* one in a document as an
   ordinary, synced, undoable edit.
-- Expected to fail (offline, denied, too slow). The last kept value
+- Expected to fail (offline, denied, timed out). The last kept value
   shows, marked as stale.
 
 **It isn't**
@@ -84,7 +84,9 @@ not in any one document.
 
 ## In this folder
 
-- [`model.md`](./model.md): how an action runs: arguments, triggers, results, limits
+- [`reference.md`](./reference.md): every name an action uses, and where each format keeps it
+- [`model.md`](./model.md): how an action runs: arguments, triggers, results
+- [`running.md`](./running.md): where it runs, its timeout, and one run per window across devices
 - [`syntax.md`](./syntax.md): stored as EDN, shown in other syntaxes
 - [`in-files.md`](./in-files.md): where an action lives in markdown, `.table` and JSON Canvas
 - [`credentials.md`](./credentials.md): connections and credentials, always-on nodes, trust
