@@ -6,6 +6,12 @@ these formats. It isn't Workspace's. Workspace's apps are one way in.
 Recorded 25 Nov 2026, as maintainer decisions. A design that breaks one
 is wrong, however convenient.
 
+These are commitments, not terms. Each repository's licence is what
+grants rights, and nothing here takes any away or adds a condition: no
+one, anywhere, for any purpose, needs anything from this page to use,
+change or share this work. The principles may change, but only to
+protect more, never less.
+
 ## Built on what came before
 
 Local-first software, peer-to-peer replication and open file formats
@@ -34,6 +40,13 @@ admin included. An operator keeps its keys, not its code.
 
 Closing code no longer buys anything anyway: agents now read and
 reverse-engineer software for days without stopping.
+
+## Forks are welcome
+
+Anyone may take this work and go further with it, under its licences,
+with or without contributing back what the licence doesn't require. If
+a fork does it better, it deserves to win: that is how open work
+improves.
 
 ## Data is sovereign
 
