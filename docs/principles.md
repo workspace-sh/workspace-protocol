@@ -66,6 +66,13 @@ stays readable, if any service, Workspace's included, disappears.
   added on top (actions, kept values, history) sits where other readers
   skip it, and its results are ordinary content.
 
+## Every language
+
+The formats hold any language people write: every script and direction,
+languages with few speakers, languages not yet written down, and
+languages coming back into use. Nothing in a format assumes one
+alphabet, one direction or one region.
+
 ## Services sell convenience, never access
 
 Anyone may run a service on top of this spec: relays, always-on
