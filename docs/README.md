@@ -2,7 +2,7 @@
 
 The specification, in flight. Each folder has its own index.
 
-[Principles](./principles.md): what every part of Workspace holds to. Start here.
+[Principles](./principles.md): the goals this spec shares with everyone building on it. Start here.
 
 - [Format](./format/README.md): What a workspace is on disk and how it's addressed.
 - [Sync](./sync/README.md): How a workspace's content replicates and merges between peers.
