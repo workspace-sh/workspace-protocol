@@ -1,6 +1,6 @@
 # Three worked examples
 
-The first step from [Where it stands](./status.md): three actions written out, with how each reads offline. Nothing here is built.
+The first step from [Where it stands](./status.md): three actions written out, with how each reads offline. Examples 1 and 3 run as tests in [`crates/actions`](../../crates/actions/tests/examples.rs), exactly as written here.
 
 ## Example 1. Markdown: a place's coordinates
 
@@ -48,6 +48,19 @@ Nominatim asks for at most one request a second and an identifying `User-Agent`.
 - **Trigger:** a change in the file the edge comes from.
 - **Needs:** read access to `household-budget.table`, by relative path.
 - **Kept:** the text node's `text`. Obsidian and other canvas apps show "Total: £19,263".
+
+```clojure
+{:id :canvas/total
+ :on [:change "household-budget.table"]
+ :needs {:read ["household-budget.table"]}
+ :fn (fn [_ env ctx]
+       (let [t (env/read "household-budget.table")]
+         {:keep (str "Total: " (env/format :currency (sum (map :amount (:rows t)))))}))}
+```
+
+The run asks twice: to read the table, then to format the total, since
+the app knows the locale and currency. Both answers go into the run
+record.
 
 <details>
 <summary>Example 3 in the TypeScript-like surface</summary>

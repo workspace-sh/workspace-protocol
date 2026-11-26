@@ -1,0 +1,20 @@
+[package]
+name = "workspace-actions"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Workspace actions (workspace-action-v1): read an action from its EDN, run it, and decide when it's due"
+publish = false
+
+[dependencies]
+# The EDN reader and printer shared with .table formulas. Pinned to a commit
+# of table-file-format's develop; the dependency runs this way only.
+workspace-edn = { git = "https://github.com/workspace-sh/table-file-format", rev = "0ad4e9a9d69207045a37b6a9d318a7c3e716a71f" }
+jiff = "0.2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

@@ -64,9 +64,10 @@ string exactly:
 A value is a number, a list of them (`[:mon :fri]`), or cron's own text
 for a step or range (`"*/15"`, `"9-17"`). Seconds and milliseconds go
 beyond cron and default to 0, so a map without them runs when cron
-would. When the clocks change, a time that's skipped runs at the first
-moment after the jump, and a time that happens twice runs once, as
-iCalendar does (RFC 5545).
+would. When the clocks change, a time that's skipped moves forward by
+the length of the gap (02:30 on a night that jumps from 02:00 to 03:00
+runs at 03:30), and a time that happens twice runs once, at its first.
+This is what iCalendar does (RFC 5545).
 
 **Proposed:** a trigger on new data from a source (prices, a feed), so
 an action runs when the source changes rather than polling a fast clock.
@@ -93,6 +94,12 @@ A request comes back as a value, or fails as one: `:offline`,
 `:timeout`, `:denied` or `:error`. A failed run keeps the last kept
 value, marked stale.
 
+**Proposed:** what `env/read` gives, by format. A `.table` is
+`{:fields [...] :rows [...]}`, each row a map from field name to value. A
+name that's a valid keyword is a keyword (`(:amount row)`), and any other
+name stays a string (`(get row "unit price")`). A Markdown or plain-text
+file is its text. A JSON Canvas file is its JSON as EDN maps.
+
 ## Results
 
 | Result | Means |
@@ -101,6 +108,20 @@ value, marked stale.
 | `{:show v}` | Drawn on this device only, never saved |
 
 An action returns either or both.
+
+A run that doesn't finish fails, and says why:
+
+| Reason | Means |
+| --- | --- |
+| `:offline`, `:timeout`, `:denied`, `:error` | A request failed that way |
+| `:timeout` | The runner stopped the run: it took longer than that runner allows |
+| `:refused` | It asked for something outside what it declares in `:needs`, or this device hasn't granted it |
+| `:limit` | It nested or grew past what the runner allows to protect itself |
+| `:failed` | A mistake in the action itself |
+
+A failure carries a message and, when something was misnamed,
+suggestions: `(cuont xs)` fails with `count` suggested, and a fetch from a
+host the action doesn't declare suggests the host it does.
 
 ## The language
 

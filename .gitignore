@@ -6,3 +6,6 @@ dist
 *.log
 .vite
 .data
+
+# Rust
+crates/*/target/

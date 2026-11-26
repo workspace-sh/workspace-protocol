@@ -30,8 +30,8 @@ node, delegated secrets, and the web runtime.
 Decided 12 Nov 2026:
 
 - **Runtime:** the Rust EDN engine already in every app (table-file-format
-  `edn/`) becomes the action runtime, with step counting and a heap cap.
-  Not QuickJS or wasmi.
+  `edn/`) becomes the action runtime. Not QuickJS or wasmi. (Its step and
+  heap budgets were replaced on 25 Nov by the runner's timeout.)
 - **Effects:** an action only asks. The app performs every fetch and every
   write, so the sandbox has no network or file access of its own.
 - **Syntax:** stored as EDN; shown as EDN and a formula-like surface first,
@@ -56,6 +56,16 @@ Decided 25 Nov 2026:
   `.table`, and none in plain text ([In files](./in-files.md)).
 - **One vocabulary** across every format ([Reference](./reference.md)).
 
+Decided 26 Nov 2026:
+
+- **Where the engine lives:** in this repository, as the
+  [`workspace-actions`](../../crates/actions/) crate. It builds on
+  table-file-format's EDN reader and printer, and the dependency runs one
+  way only: `.table` stays complete without actions, for everyone who
+  uses only the table format.
+- **One native library in Workspace's apps:** the table core and the
+  actions engine are built together, so the shared core is in an app once.
+
 ## Open
 
 - Whether actions on a clock belong only to a workspace, or to documents
@@ -68,8 +78,19 @@ Decided 25 Nov 2026:
 
 ## First step
 
-Done: [three worked examples](./examples.md). Next, a minimal
-`workspace-action-v1` evaluator in the EDN engine, ended by a timeout, that
-runs examples 1 and 3 with their fetches answered by the test.
+Done:
+
+- [Three worked examples](./examples.md).
+- The evaluator, [`crates/actions`](../../crates/actions/). It runs examples 1
+  and 3 as tests, with each request answered by the test. It also reads
+  `:at` and `:cron` and decides when a run is due, one per window.
+
+Next:
+
+- A binding, so the Linux app and the CLI can run an action in a real
+  workspace.
+- What `env/read` gives for each format (proposed in the
+  [Reference](./reference.md#requests)).
+- Writing the run record.
 
 Up: [Workspace actions](./README.md) · [All docs](../README.md)
