@@ -9,8 +9,8 @@ The first step from [Where it stands](./status.md): three actions written out, w
 ```markdown
 ## Trip
 
-Dublin: <!--[kept geo/place r7f2 2026-11-02T09:00Z]-->53.3498, -6.2603<!--[/kept]-->
-Galway: <!--[kept geo/place r7f3 2026-11-02T09:00Z]-->53.2707, -9.0568<!--[/kept]-->
+Dublin: <!--[kept geo/place {:q "Dublin"} 2026-11-02T09:00Z]-->53.3498, -6.2603<!--[/kept]-->
+Galway: <!--[kept geo/place {:q "Galway"} 2026-11-02T09:00Z]-->53.2707, -9.0568<!--[/kept]-->
 
 <!--[if !workspace]>-->
 Open this note in Workspace to keep these coordinates up to date.
