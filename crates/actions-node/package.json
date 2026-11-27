@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "build": "cargo build --release && node scripts/place.mjs",
+    "build": "sh build-native.sh",
     "test": "node --test test/*.test.mjs"
   }
 }

@@ -1,6 +1,8 @@
 // The engine's native binding (`crates/actions-node`), as the host calls it.
 // It's loaded by path, never imported, so a bundler leaves it alone.
+import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 
 export interface Described {
     id: string;
@@ -37,4 +39,17 @@ export function loadBinding(path: string): ActionsBinding {
         const why = e instanceof Error ? e.message : String(e);
         throw new Error(`the actions engine didn't load from ${path}: ${why}`);
     }
+}
+
+/**
+ * Load the binding built for this machine: beside this package's source in a
+ * checkout (`crates/actions-node/native/`), or in `native/` beside a bundle
+ * built from it (`crates/actions-node/build-native.sh <dir>` puts it there).
+ * Null when neither has one.
+ */
+export function findBinding(from: string | URL = import.meta.url): ActionsBinding | null {
+    const name = bindingFile();
+    const candidates = [new URL(`../../../crates/actions-node/native/${name}`, from), new URL(`./native/${name}`, from)];
+    const found = candidates.find((f) => existsSync(f));
+    return found ? loadBinding(fileURLToPath(found)) : null;
 }

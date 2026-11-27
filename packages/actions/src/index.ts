@@ -1,4 +1,4 @@
-export { bindingFile, loadBinding, type ActionsBinding, type Described } from "./binding.ts";
+export { bindingFile, findBinding, loadBinding, type ActionsBinding, type Described } from "./binding.ts";
 export { runToEnd, type Answer, type FailedReason, type Outcome, type Perform, type Request, type RunOptions } from "./run.ts";
 export { hostPerformer, type HostOptions } from "./perform.ts";
 export {
