@@ -2,6 +2,7 @@ export { bindingFile, describe, findBinding, loadBinding, op, opWithin, type Act
 export {
     runToEnd,
     type FailedReason,
+    type HttpDescription,
     type Outcome,
     type Perform,
     type Performed,

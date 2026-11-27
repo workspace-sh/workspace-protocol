@@ -86,6 +86,7 @@ not in any one document.
 
 - [`reference.md`](./reference.md): every name an action uses, and where each format keeps it
 - [`model.md`](./model.md): how an action runs: arguments, triggers, results
+- [`http.md`](./http.md): how a fetch reaches the network: one client, and the rules it's held to
 - [`running.md`](./running.md): where it runs, its timeout, and one run per window across devices
 - [`syntax.md`](./syntax.md): stored as EDN, shown in other syntaxes
 - [`in-files.md`](./in-files.md): where an action lives in markdown, `.table` and JSON Canvas

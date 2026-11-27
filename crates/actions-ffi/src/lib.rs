@@ -33,7 +33,7 @@ pub unsafe extern "C" fn workspace_actions_call(
     let (op, input) = (text(op), text(input));
     let deadline =
         (timeout_ms > 0).then(|| Instant::now() + Duration::from_millis(timeout_ms.into()));
-    let out = workspace_actions::api::call(&op, &input, &mut || {
+    let out = workspace_actions_http::call(&op, &input, &mut || {
         deadline.is_some_and(|d| Instant::now() >= d)
     });
     // JSON text never holds a NUL; if it somehow did, say so rather than cut it short.

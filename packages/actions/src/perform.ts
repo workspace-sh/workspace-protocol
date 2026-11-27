@@ -1,8 +1,10 @@
-// How a host performs requests: the network, files, the clock and the
-// locale, which a platform does better than the engine could. The engine has
+// How a host performs requests. A fetch goes to the engine's own client, so
+// every platform sends the same bytes under the same rules (pacing, redirects,
+// size). Files, the clock and the locale are the platform's. The engine has
 // already refused anything outside what the action declares and the device
 // grants, and it reads whatever comes back, so these only do the work.
-import type { Perform, Performed, Request, TableFiles } from "./run.ts";
+import { opWithin, type ActionsBinding } from "./binding.ts";
+import type { HttpDescription, Perform, Performed, Request, TableFiles } from "./run.ts";
 
 export interface HostOptions {
     /** BCP 47 locale for `env/format`, e.g. "en-IE". */
@@ -11,21 +13,21 @@ export interface HostOptions {
     currency: string;
     /** The clock, for `env/now`. */
     now?: () => Date;
-    /** How long one fetch may take. */
-    fetchTimeoutMs?: number;
     /** Read a workspace file by its path relative to the document, as text. */
     readFile?: (path: string) => Promise<string>;
     /** Read a `.table` by its path relative to the document. */
     readTable?: (path: string) => Promise<TableFiles>;
-    /** The fetch to use; the global one by default. */
-    fetch?: typeof fetch;
+    /** Carry a fetch some other way: for a test, or a platform that can't open a socket. */
+    http?: (description: HttpDescription) => Promise<Performed>;
 }
 
-export function hostPerformer(o: HostOptions): Perform {
+export function hostPerformer(b: ActionsBinding, o: HostOptions): Perform {
     return async (r: Request): Promise<Performed> => {
         switch (r.op) {
             case "fetch":
-                return fetchText(r.href, o);
+                if (o.http) return o.http(r.http);
+                // A little longer than the fetch's own timeout, so the client's answer is the one that's heard.
+                return opWithin<Performed>(b, "http", r.http, r.http.timeoutMs + 2_000);
             case "now":
                 return { text: (o.now ?? (() => new Date()))().toISOString() };
             case "format":
@@ -46,21 +48,6 @@ export function hostPerformer(o: HostOptions): Perform {
                 return { failed: "denied", message: `this app can't answer env/${r.op} yet` };
         }
     };
-}
-
-async function fetchText(href: string, o: HostOptions): Promise<Performed> {
-    const host = new URL(href).host;
-    try {
-        const res = await (o.fetch ?? fetch)(href, {
-            signal: AbortSignal.timeout(o.fetchTimeoutMs ?? 10_000),
-            headers: { accept: "application/json" },
-        });
-        return { status: res.status, body: await res.text() };
-    } catch (e) {
-        const name = e instanceof Error ? e.name : "";
-        if (name === "TimeoutError") return { failed: "timeout", message: `${host} didn't answer in time` };
-        return { failed: "offline", message: `couldn't reach ${host}` };
-    }
 }
 
 function format(as: string, value: unknown, o: HostOptions): Performed {

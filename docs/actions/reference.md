@@ -96,7 +96,7 @@ device grants it.
 | Request | Does | Needs |
 | --- | --- | --- |
 | `(env/fetch url query)` | HTTP GET, with query parameters as a map | The host, in `:fetch` |
-| `(env/fetch url query {:method :post :body …})` | HTTP POST | The host and method in `:fetch`: **proposed** |
+| `(env/fetch url query {:method :post :body … :headers {…}})` | Send: POST, PUT, PATCH or DELETE (and HEAD, which only reads) | The method and host, in `:fetch`: `[:post "api.example.org"]` |
 | `(env/read path)` | Read another file in the workspace, by relative path | The path, in `:read` |
 | `(env/write path content)` | Make or change a file, as an ordinary undoable edit | The path, in `:write`: **proposed** |
 | `(env/now)` | The time | Nothing |
@@ -112,6 +112,8 @@ value, marked stale.
 A fetch's answer is the response read as JSON, or its text when it isn't
 JSON. A response outside 200–299 fails as `:error`. A query's names are
 sent in sorted order, so every device asks for the same address.
+[Fetching](./http.md) says exactly what goes on the wire, and the rules
+every device holds a fetch to.
 
 What `env/read` gives, by format:
 

@@ -1,0 +1,16 @@
+[package]
+name = "workspace-actions-http"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "How a Workspace action's fetch goes on the wire: one HTTP client for every platform that can open a socket"
+publish = false
+
+[dependencies]
+workspace-actions = { path = "../actions" }
+serde_json = { version = "1", features = ["float_roundtrip", "preserve_order"] }
+# The HTTP client: blocking, with no async runtime to carry into an app.
+# TLS is rustls, compiled in, so the protocol behaves the same on every
+# platform and needs nothing from the operating system (Android offers native
+# code none). Which authorities to trust is still the device's own list.
+ureq = { version = "3", default-features = false, features = ["rustls", "platform-verifier", "gzip"] }

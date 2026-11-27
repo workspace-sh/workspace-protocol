@@ -71,7 +71,7 @@ Decided 26 Nov 2026:
 - Whether actions on a clock belong only to a workspace, or to documents
   too (a document's would run only while it's open somewhere).
 - `.table`'s button and view actions.
-- `env/write`, POST, and a trigger on new data from a source.
+- `env/write`, and a trigger on new data from a source.
 - How a workspace's own actions are stored, and who may add one.
 - An always-on node's default: seed only, or also run.
 - "Broaden the scope to Arabic": raised, not yet understood.
@@ -95,8 +95,11 @@ Done:
 - Bindings of that one call: Node (the Linux app, the command line) and
   C, with a Swift wrapper. The Linux app refreshes a Markdown document's
   kept values when it opens.
-- An app performs requests (the network, files, the clock, its locale,
-  the screen) and remembers what a device has granted. Nothing else.
+- Fetching is the engine's own too ([Fetching](./http.md)): one HTTP
+  client and one set of rules on every platform, with reading and
+  sending granted apart.
+- An app performs the rest (files, the clock, its locale, the screen)
+  and remembers what a device has granted. Nothing else.
 
 Next:
 

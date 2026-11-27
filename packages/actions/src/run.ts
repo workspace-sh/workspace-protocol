@@ -3,9 +3,21 @@
 // answer so far. The engine decides everything; the host only performs.
 import { op, opWithin, type ActionsBinding } from "./binding.ts";
 
+/** A fetch exactly as it goes on the wire; the engine's own client sends it (the `http` operation). */
+export interface HttpDescription {
+    method: string;
+    url: string;
+    headers: [string, string][];
+    body: string | null;
+    timeoutMs: number;
+    maxBytes: number;
+    maxRedirects: number;
+    redirectHosts: string[];
+}
+
 /** A request, as the engine hands it to the host. */
 export type Request =
-    | { op: "fetch"; url: string; query?: Record<string, unknown>; /** The whole address, query included. */ href: string }
+    | { op: "fetch"; url: string; query?: Record<string, unknown>; /** The whole address, query included. */ href: string; http: HttpDescription }
     | { op: "read"; path: string }
     | { op: "now" }
     | { op: "format"; as: string; value: unknown }

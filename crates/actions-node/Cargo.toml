@@ -10,7 +10,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-workspace-actions = { path = "../actions" }
+workspace-actions-http = { path = "../actions-http" }
 napi = { version = "3", default-features = false, features = ["napi4"] }
 napi-derive = "3"
 

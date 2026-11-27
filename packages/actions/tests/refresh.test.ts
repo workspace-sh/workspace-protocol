@@ -3,7 +3,7 @@
 // in `crates/actions`; this checks the host's half, performing and passing on.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { describe, findBinding, hostPerformer, refresh, type Perform } from "../src/index.ts";
+import { describe, findBinding, hostPerformer, opWithin, refresh, type HttpDescription, type Perform, type Performed } from "../src/index.ts";
 
 const found = findBinding();
 if (found === null) throw new Error("build the binding first: npm run build in crates/actions-node");
@@ -30,11 +30,11 @@ Total: <!--[kept trip/total {:items [14400 4863]}]-->?<!--[/kept]-->
 
 const now = new Date("2026-11-27T10:00:00Z");
 const asked: string[] = [];
-const fakeFetch = (async (href: string | URL | Request) => {
-    asked.push(String(href));
-    return new Response(JSON.stringify([{ lat: "53.3498", lon: "-6.2603" }]), { headers: { "content-type": "application/json" } });
-}) as typeof fetch;
-const perform: Perform = hostPerformer({ locale: "en-GB", currency: "GBP", fetch: fakeFetch });
+const answering = (body: unknown) => async (d: HttpDescription) => {
+    asked.push(`${d.method} ${d.url}`);
+    return { status: 200, body: JSON.stringify(body) };
+};
+const perform: Perform = hostPerformer(b, { locale: "en-GB", currency: "GBP", http: answering([{ lat: "53.3498", lon: "-6.2603" }]) });
 const textOf = (r: { doc: { format: string; text?: string } }): string => r.doc.text ?? "";
 
 test("describe reads an action without running it", () => {
@@ -56,19 +56,17 @@ test("with the grant, the host fetches the address the engine built and the valu
         { format: "markdown", text: TRIP },
         { event: "open", now, zone: null, grants: { "geo/place": { fetch: ["nominatim.openstreetmap.org"] } }, perform, timeoutMs: 5000 },
     );
-    assert.deepEqual(asked, ["https://nominatim.openstreetmap.org/search?format=json&limit=1&q=Dublin"]);
+    assert.deepEqual(asked, ["GET https://nominatim.openstreetmap.org/search?format=json&limit=1&q=Dublin"]);
     assert.match(textOf(r), /<!--\[kept geo\/place \{:q "Dublin"\} 2026-11-27T10:00:00Z\]-->53\.3498, -6\.2603<!--\[\/kept\]-->/);
     assert.equal(r.results.length, 2);
     assert.ok(r.results.every((x) => x.record.startsWith("{")), "each run has its record");
 });
 
 test("a failed fetch keeps the last value and says why", async () => {
-    const down = hostPerformer({
+    const down = hostPerformer(b, {
         locale: "en-GB",
         currency: "GBP",
-        fetch: (async () => {
-            throw new TypeError("fetch failed");
-        }) as typeof fetch,
+        http: async () => ({ failed: "offline", message: "couldn't reach nominatim.openstreetmap.org" }),
     });
     const r = await refresh(
         b,
@@ -85,4 +83,11 @@ test("a run that never ends is stopped by the runner's timeout", async () => {
     const r = await refresh(b, { format: "markdown", text: doc }, { event: "open", now, zone: null, grants: {}, perform, timeoutMs: 200 });
     const o = r.results[0]?.outcome;
     assert.ok(o?.status === "failed" && (o.reason === "timeout" || o.reason === "limit"), JSON.stringify(o));
+});
+
+test("the engine's own client refuses what isn't https, and names a host that doesn't exist as offline", async () => {
+    const d: HttpDescription = { method: "GET", url: "http://a.example/", headers: [], body: null, timeoutMs: 2000, maxBytes: 1000, maxRedirects: 0, redirectHosts: [] };
+    assert.deepEqual(await opWithin<Performed>(b, "http", d, 4000), { failed: "error", message: '"http://a.example/" isn\'t an https:// address' });
+    const gone = await opWithin<Performed>(b, "http", { ...d, url: "https://no-such-host.invalid/" }, 4000);
+    assert.deepEqual(gone, { failed: "offline", message: "couldn't reach no-such-host.invalid" });
 });

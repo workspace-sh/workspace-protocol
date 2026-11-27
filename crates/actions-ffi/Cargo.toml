@@ -13,6 +13,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dependencies]
 workspace-actions = { path = "../actions" }
+workspace-actions-http = { path = "../actions-http" }
 
 [profile.release]
 opt-level = 3

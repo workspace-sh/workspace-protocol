@@ -1,7 +1,8 @@
 //! The native Node binding (N-API) of `workspace-actions`, for the Linux app
 //! and the command line. It is the engine's one call and nothing more: an
 //! operation's name and JSON text in, JSON text out
-//! (`workspace_actions::api`).
+//! (`workspace_actions::api`), with `http` added: the engine's own client
+//! (`workspace_actions_http`), so nothing here uses Node's.
 
 use std::time::{Duration, Instant};
 
@@ -12,7 +13,7 @@ use napi_derive::napi;
 /// reading a document, planning, answering, writing back.
 #[napi]
 pub fn call(op: String, input: String) -> String {
-    workspace_actions::api::call(&op, &input, &mut || false)
+    workspace_actions_http::call(&op, &input, &mut || false)
 }
 
 pub struct CallTask {
@@ -27,7 +28,7 @@ impl Task for CallTask {
 
     fn compute(&mut self) -> Result<String> {
         let deadline = Instant::now() + self.timeout;
-        Ok(workspace_actions::api::call(
+        Ok(workspace_actions_http::call(
             &self.op,
             &self.input,
             &mut || Instant::now() >= deadline,
