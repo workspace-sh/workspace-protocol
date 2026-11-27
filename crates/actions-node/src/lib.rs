@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 use jiff::Timestamp;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use workspace_actions::{due as due_at, parse_action, run_text, Due};
+use workspace_actions::{due as due_at, parse_action, run_text, Due, Trigger};
 
 pub struct RunTask {
     action: String,
@@ -92,4 +92,152 @@ pub fn due(
 
 fn edn_str(s: &str) -> String {
     workspace_edn::print(&workspace_edn::Value::Str(s.into()))
+}
+
+/// JSON as EDN text, as a fetch's answer is given to an action. An object's
+/// key becomes a keyword when it can be one (`"lat"` → `:lat`), so `(:lat r)`
+/// works, and stays a string otherwise (`"unit price"`). Throws on bad JSON.
+#[napi(js_name = "jsonToEdn")]
+pub fn json_to_edn(json: String) -> Result<String> {
+    let j: serde_json::Value = serde_json::from_str(&json)
+        .map_err(|e| Error::new(Status::InvalidArg, format!("not JSON: {e}")))?;
+    Ok(workspace_edn::print(&from_json(&j)))
+}
+
+/// EDN text as JSON, for the app to read a request or show a kept value.
+/// Keywords and symbols become their names, sets and lists arrays, and a map
+/// key that isn't a keyword or a string its EDN text. Throws on bad EDN.
+#[napi(js_name = "ednToJson")]
+pub fn edn_to_json(edn: String) -> Result<String> {
+    let v = workspace_edn::read(&edn).map_err(|e| Error::new(Status::InvalidArg, e.to_string()))?;
+    Ok(to_json(&v).to_string())
+}
+
+fn keyword_ok(k: &str) -> bool {
+    let mut chars = k.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    let rest_ok = |c: char| c.is_ascii_alphanumeric() || "*+!-_?<>=.".contains(c);
+    (first.is_ascii_alphabetic() || "*+!-_?<>=".contains(first))
+        && chars.all(rest_ok)
+        && !(first == '-' && k[1..].starts_with(|c: char| c.is_ascii_digit()))
+}
+
+fn from_json(j: &serde_json::Value) -> workspace_edn::Value {
+    use workspace_edn::Value as V;
+    match j {
+        serde_json::Value::Null => V::Nil,
+        serde_json::Value::Bool(b) => V::Bool(*b),
+        serde_json::Value::Number(n) => match (n.as_i64(), n.as_f64()) {
+            (Some(i), _) => V::Int(i),
+            (None, _) if n.is_u64() => V::BigInt(n.to_string()),
+            (None, Some(f)) => V::Float(f),
+            _ => V::BigInt(n.to_string()),
+        },
+        serde_json::Value::String(s) => V::Str(s.clone()),
+        serde_json::Value::Array(a) => V::Vector(a.iter().map(from_json).collect()),
+        serde_json::Value::Object(o) => V::Map(
+            o.iter()
+                .map(|(k, v)| {
+                    let key = if keyword_ok(k) {
+                        V::Keyword(k.clone())
+                    } else {
+                        V::Str(k.clone())
+                    };
+                    (key, from_json(v))
+                })
+                .collect(),
+        ),
+    }
+}
+
+fn to_json(v: &workspace_edn::Value) -> serde_json::Value {
+    use serde_json::Value as J;
+    use workspace_edn::Value as V;
+    match v {
+        V::Nil => J::Null,
+        V::Bool(b) => J::Bool(*b),
+        V::Int(i) => J::from(*i),
+        V::Float(f) => serde_json::Number::from_f64(*f).map_or(J::Null, J::Number),
+        V::Str(s) | V::Symbol(s) | V::Keyword(s) | V::BigInt(s) | V::Decimal(s) => {
+            J::String(s.clone())
+        }
+        V::Char(c) => J::String(c.to_string()),
+        V::List(items) | V::Vector(items) | V::Set(items) => {
+            J::Array(items.iter().map(to_json).collect())
+        }
+        V::Map(entries) => J::Object(
+            entries
+                .iter()
+                .map(|(k, v)| {
+                    let key = match k {
+                        V::Str(s) | V::Keyword(s) => s.clone(),
+                        other => workspace_edn::print(other),
+                    };
+                    (key, to_json(v))
+                })
+                .collect(),
+        ),
+        V::Tagged(_, inner) => to_json(inner),
+    }
+}
+
+/// The value at `key` in an EDN map, as EDN text, or `null` when the map has
+/// no such key. `key` is a keyword's name (`"request"` for `:request`). It
+/// lets the app take a request or a kept value out of an outcome exactly as
+/// the engine printed it. Throws when `edn` isn't a map.
+#[napi]
+pub fn get(edn: String, key: String) -> Result<Option<String>> {
+    let v = workspace_edn::read(&edn).map_err(|e| Error::new(Status::InvalidArg, e.to_string()))?;
+    let workspace_edn::Value::Map(entries) = v else {
+        return Err(Error::new(Status::InvalidArg, "not an EDN map".to_string()));
+    };
+    Ok(entries.iter().find_map(|(k, v)| match k {
+        workspace_edn::Value::Keyword(k) if *k == key => Some(workspace_edn::print(v)),
+        _ => None,
+    }))
+}
+
+/// What an action is, for the app to show and to decide what to grant.
+#[napi(object)]
+pub struct Described {
+    pub id: String,
+    /// What runs it: `"open"`, `"tap"`, `"edit"`, `"change"`, `"at"`, `"cron"`,
+    /// `"none"`, or `"unknown"` for a trigger this version doesn't know.
+    pub on: String,
+    /// `:fresh`, an ISO 8601 duration, if it has one.
+    pub fresh: Option<String>,
+    /// The hosts it may fetch from.
+    pub fetch: Vec<String>,
+    /// The workspace paths it may read.
+    pub read: Vec<String>,
+    pub locate: bool,
+    pub ask: bool,
+}
+
+/// Read an action without running it. Throws, with the reader's message,
+/// when it can't be read.
+#[napi]
+pub fn describe(action: String) -> Result<Described> {
+    let a = parse_action(&action).map_err(|e| Error::new(Status::InvalidArg, e.to_string()))?;
+    let on = match a.on {
+        Trigger::None => "none",
+        Trigger::Open => "open",
+        Trigger::Tap => "tap",
+        Trigger::Edit(_) => "edit",
+        Trigger::Change(_) => "change",
+        Trigger::At(_) => "at",
+        Trigger::Cron(..) => "cron",
+        Trigger::Unknown(_) => "unknown",
+    };
+    Ok(Described {
+        id: a.id,
+        on: on.into(),
+        fresh: a.fresh,
+        fetch: a.needs.fetch,
+        read: a.needs.read,
+        locate: a.needs.locate,
+        ask: a.needs.ask,
+    })
 }

@@ -2,10 +2,10 @@ name: actions-engine
 
 on:
   pull_request:
-    paths: ["crates/actions/**", "crates/actions-node/**", ".github/workflows/actions-engine.yml"]
+    paths: ["crates/actions/**", "crates/actions-node/**", "packages/actions/**", ".github/workflows/actions-engine.yml"]
   push:
     branches: [develop]
-    paths: ["crates/actions/**", "crates/actions-node/**", ".github/workflows/actions-engine.yml"]
+    paths: ["crates/actions/**", "crates/actions-node/**", "packages/actions/**", ".github/workflows/actions-engine.yml"]
 
 permissions:
   contents: read
@@ -42,3 +42,9 @@ jobs:
       - run: cargo clippy -- -D warnings
       - run: npm run build
       - run: npm test
+      - run: npm ci --no-audit --no-fund
+        working-directory: .
+      - run: npm -w @workspace.sh/actions run typecheck
+        working-directory: .
+      - run: npm -w @workspace.sh/actions test
+        working-directory: .
