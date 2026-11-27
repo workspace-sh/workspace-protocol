@@ -97,7 +97,7 @@ pub struct Needs {
 }
 
 impl Needs {
-    fn from_value(v: Option<&Value>) -> Result<Needs, String> {
+    pub fn from_value(v: Option<&Value>) -> Result<Needs, String> {
         let mut needs = Needs::default();
         let Some(v) = v else { return Ok(needs) };
         let Value::Map(entries) = v else {
@@ -121,7 +121,7 @@ impl Needs {
         Ok(needs)
     }
 
-    fn to_value(&self) -> Value {
+    pub fn to_value(&self) -> Value {
         let list =
             |xs: &[String]| Value::Vector(xs.iter().map(|x| Value::Str(x.clone())).collect());
         Value::Map(vec![
@@ -365,7 +365,7 @@ pub fn run_text(action: &str, input: &str, interrupt: &mut dyn FnMut() -> bool) 
     print(&outcome_value(&outcome))
 }
 
-fn read_input(text: &str) -> Result<Input, String> {
+pub(crate) fn read_input(text: &str) -> Result<Input, String> {
     let v = read(text).map_err(|e| format!("the input: {e}"))?;
     let Value::Map(entries) = v else {
         return Err("the input is a map".into());
@@ -403,7 +403,7 @@ fn read_input(text: &str) -> Result<Input, String> {
     Ok(input)
 }
 
-fn answer_of(v: &Value) -> Result<Answer, String> {
+pub fn answer_of(v: &Value) -> Result<Answer, String> {
     let Value::Map(entries) = v else {
         return Err("an answer is {:value v} or {:failed :offline}".into());
     };
@@ -1308,7 +1308,7 @@ fn check_pattern(p: &Value) -> Result<(), String> {
 }
 
 /// The host of an `https://` address, without a port or user.
-fn https_host(url: &str) -> Option<&str> {
+pub(crate) fn https_host(url: &str) -> Option<&str> {
     let rest = url.strip_prefix("https://")?;
     let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
     let host = &rest[..end];

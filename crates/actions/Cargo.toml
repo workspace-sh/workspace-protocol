@@ -11,6 +11,8 @@ publish = false
 # of table-file-format's develop; the dependency runs this way only.
 workspace-edn = { git = "https://github.com/workspace-sh/table-file-format", rev = "0ad4e9a9d69207045a37b6a9d318a7c3e716a71f" }
 jiff = "0.2"
+# Already in the tree through workspace-edn, with the same features, so it is built once.
+serde_json = { version = "1", features = ["float_roundtrip", "preserve_order"] }
 
 [profile.release]
 opt-level = 3

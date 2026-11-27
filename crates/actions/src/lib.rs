@@ -10,6 +10,14 @@
 //! formulas. This crate depends on it, never the other way round.
 
 pub mod action;
+pub mod api;
+pub mod canvas;
+pub mod json;
+pub mod jsonspan;
+pub mod markdown;
+pub mod place;
+pub mod plan;
+pub mod table;
 pub mod trigger;
 pub mod window;
 

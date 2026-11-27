@@ -299,6 +299,7 @@ name = "workspace-actions"
 version = "0.1.0"
 dependencies = [
  "jiff",
+ "serde_json",
  "workspace-edn",
 ]
 
