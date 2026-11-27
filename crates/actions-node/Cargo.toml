@@ -1,0 +1,28 @@
+[package]
+name = "workspace-actions-node"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Native Node binding of workspace-actions (N-API), for the Linux app and the CLI"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+workspace-actions = { path = "../actions" }
+jiff = "0.2"
+# The same commit the engine pins, so Cargo builds it once.
+workspace-edn = { git = "https://github.com/workspace-sh/table-file-format", rev = "0ad4e9a9d69207045a37b6a9d318a7c3e716a71f" }
+napi = { version = "3", default-features = false, features = ["napi4"] }
+napi-derive = "3"
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

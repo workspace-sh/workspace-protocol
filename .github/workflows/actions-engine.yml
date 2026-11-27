@@ -2,10 +2,10 @@ name: actions-engine
 
 on:
   pull_request:
-    paths: ["crates/actions/**", ".github/workflows/actions-engine.yml"]
+    paths: ["crates/actions/**", "crates/actions-node/**", ".github/workflows/actions-engine.yml"]
   push:
     branches: [develop]
-    paths: ["crates/actions/**", ".github/workflows/actions-engine.yml"]
+    paths: ["crates/actions/**", "crates/actions-node/**", ".github/workflows/actions-engine.yml"]
 
 permissions:
   contents: read
@@ -24,3 +24,21 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
+
+  node:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crates/actions-node
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: cargo fmt --check
+      - run: cargo clippy -- -D warnings
+      - run: npm run build
+      - run: npm test

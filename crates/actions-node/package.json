@@ -1,0 +1,12 @@
+{
+  "name": "@workspace.sh/actions-native",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native Node binding of the Workspace actions engine",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "cargo build --release && node scripts/place.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}
