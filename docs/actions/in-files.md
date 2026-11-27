@@ -31,6 +31,14 @@ Galway: <!--[kept geo/place {:q "Galway"} 2026-11-25T09:00Z]-->53.2707, -9.0568<
   `\u003c` and `\u003e`, which EDN reads back as the same characters,
   and a symbol containing `-->` is refused. The EDN can then never end
   the comment.
+- **A marker without a time** is a place that hasn't run yet, as a
+  person writes one: `<!--[kept geo/place {:q "Cork"}]-->…<!--[/kept]-->`.
+- **Code is never read.** A marker or an action inside a fenced block or
+  an inline code span is text about actions, so a document can explain
+  them without running anything.
+- **A kept value** is written as a person would write it: a string as
+  itself, a list of numbers or strings joined by `, `. `&` and `<` are
+  written as entities, so a value can't open a tag or a comment.
 - TextBundle and TextPack keep both in their text file, exactly as
   Markdown does, so the three stay one format for actions.
 
@@ -50,15 +58,44 @@ A row keeps the value as an ordinary cell, and what made it beside it:
 
 The value and where it came from change in one edit, so undo and sync
 never part them. Another reader, or a CSV export, sees an ordinary
-`cover` column. Still to place: a button (an action on the selected
-rows) and a view's action (many rows as one undo step).
+`cover` column.
+
+- **An action's inputs are its row,** as a map from field name to value,
+  without the cell it fills.
+- **`from` records the cell an `[:edit …]` trigger watches,** as it was
+  when the value was made. When the row's cell no longer matches it, the
+  value is out of date and the action runs the next time the table
+  opens. An edit made in any app, Workspace or not, is caught this way.
+  A row whose watched cell is empty doesn't run.
+- **Writing a value changes that row's line and nothing else:** the
+  other rows, and the row's own key order and spacing, stay byte for
+  byte as they were.
+
+Still to place: a button (an action on the selected rows) and a view's
+action (many rows as one undo step).
 
 ## JSON Canvas
 
-An action is an `"x-action"` on a node, and the kept value is the
-node's own `text`, which every canvas app shows. An edge can say what
-it carries (`"x-carries"`), a small dataflow. Other canvas apps ignore
-unknown properties.
+```json
+{ "nodes": [
+    { "id": "total", "type": "text", "text": "Total: £19,263",
+      "x-action": "canvas/total",
+      "x-kept": { "action": "canvas/total", "at": "2026-11-25T09:00:00Z" } } ],
+  "x-actions": { "canvas/total": "{:id :canvas/total :on [:change \"household-budget.table\"] …}" } }
+```
+
+The kept value is a text node's own `text`, which every canvas app
+shows. The canvas holds its actions by id in `"x-actions"`, as a
+`.table` does, and a node names the one that fills it with `"x-action"`
+(or holds the action's EDN there itself). `"x-kept"` records the run:
+the action, when it ran, and its inputs as `"from"` when it takes any.
+Only a text node can keep a value. Writing one changes that node's
+`text` and `x-kept` and no other byte, so the file stays laid out as
+the app that made it left it. Other canvas apps ignore unknown
+properties.
+
+Still to place: what an edge carries (`"x-carries"`), a small dataflow
+between nodes.
 
 ## A workspace
 

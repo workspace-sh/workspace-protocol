@@ -3,6 +3,16 @@
 The engine for [Workspace actions](../../docs/actions/README.md),
 `workspace-action-v1`, in Rust.
 
+- **`api`** is the whole engine as one call, an operation's name and JSON
+  in, JSON out. Every binding is this one function: `plan` what an event
+  runs, `run` it, `answer` what it asks, `apply` what it keeps, `record`
+  and `check` the run. It's what an app uses; the modules below are what
+  it's made of.
+- **`markdown`**, **`canvas`** and **`table`** read a document's actions
+  and the places that keep their values, and write a value back changing
+  no other byte of the file.
+- **`plan`** decides which places an event runs, which their window holds
+  back, and which wait for a grant.
 - **`action`** reads an action from its EDN and runs it. An action only
   asks: every `env/…` call is a request the app performs, so the engine
   has no network, files or clock of its own. A run that reaches a request

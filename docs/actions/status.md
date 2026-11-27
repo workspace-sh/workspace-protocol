@@ -85,12 +85,27 @@ Done:
   and 3 as tests, with each request answered by the test. It also reads
   `:at` and `:cron` and decides when a run is due, one per window.
 
+- The engine does everything that isn't a platform's own job, behind one
+  call (an operation's name and JSON in, JSON out):
+  - reading and writing Markdown, JSON Canvas and `.table` placement;
+  - deciding what an event runs, what its window holds back, and what
+    waits for a grant;
+  - building each request and reading its answer;
+  - writing and checking a run's record.
+- Bindings of that one call: Node (the Linux app, the command line) and
+  C, with a Swift wrapper. The Linux app refreshes a Markdown document's
+  kept values when it opens.
+- An app performs requests (the network, files, the clock, its locale,
+  the screen) and remembers what a device has granted. Nothing else.
+
 Next:
 
-- A binding, so the Linux app and the CLI can run an action in a real
-  workspace.
-- What `env/read` gives for each format (proposed in the
-  [Reference](./reference.md#requests)).
-- Writing the run record.
+- The Swift wrapper built and run on iOS and macOS.
+- One native library holding this and the `.table` core, so an app has
+  the shared EDN reader once.
+- `:tap`, `[:edit …]` and `[:change …]` raised by the apps, and Canvas
+  and `.table` documents refreshed as Markdown is.
+- Where a run's full record is kept: the document holds the short form
+  (the marker), and the workspace's log is to design.
 
 Up: [Workspace actions](./README.md) · [All docs](../README.md)

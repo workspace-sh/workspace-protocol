@@ -24,6 +24,21 @@ differs. Decided 25 Nov 2026 unless marked **proposed**.
 A key this version doesn't know is kept and ignored, so a later version
 can add one.
 
+## A run's `ctx`
+
+What the third argument holds. The app supplies what it knows (its
+locale, the member, the device, its timeout) and the engine adds the
+rest.
+
+| Key | What it holds |
+| --- | --- |
+| `:trigger` | What ran it: `:open`, `:tap`, `:clock`, `[:edit "isbn"]` or `[:change "budget.table"]` |
+| `:action` | The action's id, as a keyword |
+| `:place` | Which kept value this run is for: `"m:0"` (a document's first marker), `"n:<node id>"`, `"r:<row id>:<field>"` |
+| `:last`, `:last-at` | The value kept now and when it was kept, if it has run before |
+| `:slot` | The moment a clock run is for |
+| `:locale` and others | Whatever the app supplied |
+
 ## Triggers
 
 **In a document**, triggered by the document:
@@ -94,11 +109,21 @@ A request comes back as a value, or fails as one: `:offline`,
 `:timeout`, `:denied` or `:error`. A failed run keeps the last kept
 value, marked stale.
 
-**Proposed:** what `env/read` gives, by format. A `.table` is
-`{:fields [...] :rows [...]}`, each row a map from field name to value. A
-name that's a valid keyword is a keyword (`(:amount row)`), and any other
-name stays a string (`(get row "unit price")`). A Markdown or plain-text
-file is its text. A JSON Canvas file is its JSON as EDN maps.
+A fetch's answer is the response read as JSON, or its text when it isn't
+JSON. A response outside 200–299 fails as `:error`. A query's names are
+sent in sorted order, so every device asks for the same address.
+
+What `env/read` gives, by format:
+
+| File | Gives |
+| --- | --- |
+| Markdown, plain text | Its text |
+| JSON Canvas, JSON | Its JSON, as EDN maps |
+| `.table` | `{:fields […] :rows […]}` for its first table, and every table by name under `:tables` |
+
+A row is a map from field name to value. In every map made from JSON, a
+name that's a valid keyword is a keyword (`(:amount row)`), and any
+other name stays a string (`(get row "unit price")`).
 
 ## Results
 
@@ -123,12 +148,32 @@ A failure carries a message and, when something was misnamed,
 suggestions: `(cuont xs)` fails with `count` suggested, and a fetch from a
 host the action doesn't declare suggests the host it does.
 
+## Run records
+
+A run that ends has a record: what it was given, what it asked and was
+told, and how it came out.
+
+```clojure
+{:v 1 :action :geo/place :place "m:0" :at "2026-11-27T10:00:00Z"
+ :request {:q "Dublin"} :ctx {…} :granted {…}
+ :asked [[{:op :fetch :url "…" :query {…}} {:value [{:lat "53.3498" :lon "-6.2603"}]}]]
+ :result {:keep ["53.3498" "-6.2603"]}}
+```
+
+An action is pure apart from what it asks, so running it again with the
+record's own answers gives the record's result. That's how a record is
+checked without performing anything again. A failed run's `:result` is
+`{:failed :offline :message "…"}`. A clock run's record also has `:slot`.
+
+In a document, the `kept` marker is the short form every reader sees:
+the action, its inputs and when it ran.
+
 ## The language
 
 A small, pure part of Clojure over EDN values, with Clojure's names:
 
 - Forms: `let`, `if`, `when`, `do`, `and`, `or`, `fn`.
-- Functions: `=`, `not=`, `<`, `>`, `<=`, `>=`, `+`, `-`, `*`, `/`, `not`, `nil?`, `empty?`, `count`, `first`, `second`, `last`, `rest`, `nth`, `get`, `get-in`, `assoc`, `contains?`, `keys`, `vals`, `str`, `map`, `filter`, `reduce`, `sum`, `min`, `max`, `round`, `parse-number`.
+- Functions: `=`, `not=`, `<`, `>`, `<=`, `>=`, `+`, `-`, `*`, `/`, `not`, `nil?`, `empty?`, `string?`, `number?`, `map?`, `vector?`, `count`, `first`, `second`, `last`, `rest`, `nth`, `get`, `get-in`, `assoc`, `contains?`, `keys`, `vals`, `vector`, `hash-map`, `concat`, `range`, `str`, `map`, `filter`, `reduce`, `sum`, `min`, `max`, `round`, `parse-number`.
 - A keyword looks itself up in a map: `(:lat r)`.
 
 There's no mutation and nothing that outlives a run.
@@ -140,7 +185,7 @@ There's no mutation and nothing that outlives a run.
 | Markdown | `<!--action … -->` | `<!--[kept geo/place {:q "Dublin"} 2026-11-25T09:00Z]-->53.3498, -6.2603<!--[/kept]-->` |
 | TextPack | The same, in its text file | The same |
 | TextBundle | The same, in its text file | The same |
-| JSON Canvas | `"x-action"` on a node or edge | The node's own `text` |
+| JSON Canvas | `"x-actions"` at the top, by id; a text node names its action with `"x-action"` | The node's own `text`, plus `"x-kept"` on the node |
 | `.table` | `"x-actions"` in `schema.json`, by id; a field names its action with `"x-action"` | The cell itself, plus `"x-kept"` in the row |
 | A workspace | Beside its policy, synced through its log | The files it writes |
 | Plain text | None: a `.txt` file has nowhere to keep one | None |
