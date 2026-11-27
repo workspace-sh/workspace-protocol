@@ -367,8 +367,8 @@ fn scan(text: &str) -> (Doc, Vec<Marked>) {
             i = closed.unwrap_or(i + n);
             continue;
         }
-        if rest.starts_with("<!--") {
-            let Some(len) = rest[4..].find("-->") else {
+        if let Some(after) = rest.strip_prefix("<!--") {
+            let Some(len) = after.find("-->") else {
                 break; // An unterminated comment runs to the end.
             };
             let (start, end) = (i, i + 4 + len + 3);
