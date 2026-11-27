@@ -1,15 +1,14 @@
-export { bindingFile, findBinding, loadBinding, type ActionsBinding, type Described } from "./binding.ts";
-export { runToEnd, type Answer, type FailedReason, type Outcome, type Perform, type Request, type RunOptions } from "./run.ts";
-export { hostPerformer, type HostOptions } from "./perform.ts";
+export { bindingFile, describe, findBinding, loadBinding, op, opWithin, type ActionsBinding, type Described, type Needs } from "./binding.ts";
 export {
-    keptMarker,
-    keptText,
-    readMarkdown,
-    unescapeComment,
-    writeKept,
-    type ActionBlock,
-    type Kept,
-    type MarkdownActions,
-    type Problem,
-} from "./markdown.ts";
-export { markerTime, refreshMarkdown, type Grants, type KeptResult, type Refreshed, type RefreshOptions } from "./refresh.ts";
+    runToEnd,
+    type FailedReason,
+    type Outcome,
+    type Perform,
+    type Performed,
+    type PlannedRun,
+    type Request,
+    type RunOptions,
+    type TableFiles,
+} from "./run.ts";
+export { hostPerformer, type HostOptions } from "./perform.ts";
+export { refresh, type Doc, type DocEvent, type Held, type Problem, type Refreshed, type RefreshOptions, type Ungranted } from "./refresh.ts";

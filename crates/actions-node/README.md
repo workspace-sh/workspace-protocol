@@ -1,7 +1,7 @@
 # workspace-actions-node
 
-The actions engine (`crates/actions`) as a native Node add-on (N-API), for the
-Linux app and the CLI.
+The actions engine (`crates/actions`) as a native Node add-on (N-API), for
+the Linux app and the command line.
 
 ```sh
 npm run build   # cargo build --release, then native/actions.<platform>-<arch>.node
@@ -11,23 +11,22 @@ npm test
 ```js
 const actions = require("./native/actions.linux-x64.node");
 
-await actions.run(actionEdn, inputEdn, 5000);
-// → '{:asked [] :request {:op :fetch …} :status :needs}'
+JSON.parse(actions.call("plan", JSON.stringify({ format: "markdown", text, event: "open", now, grants: {} })));
+// → { runs: […], held: […], ungranted: […], problems: […] }
 
-actions.due(actionEdn, lastRun, new Date().toISOString(), "Europe/Madrid");
-// → '{:due :now :slot "2026-11-27T08:00:00Z"}'
+JSON.parse(await actions.callWithin("run", JSON.stringify({ edn, input }), 5000));
+// → { status: "needs", request: { op: "fetch", href: "https://…" }, … }
 ```
 
-- `run(action, input, timeoutMs)` runs on a worker thread and resolves to the
-  outcome as EDN. It never rejects: a mistake in the action is a `:failed`
-  outcome. `input` is a map of `:request`, `:ctx`, `:granted` and `:answers`.
-- `due(action, lastRun, now, localZone)` says whether the action is due, as
-  EDN. Times are RFC 3339; `lastRun` and `localZone` may be `null`. It throws
-  when the action or a time can't be read.
+- `call(op, input)` runs an operation now and returns JSON text.
+- `callWithin(op, input, timeoutMs)` runs it on a worker thread and stops it
+  after the timeout: for `run` and `check`, which take as long as the action
+  does. It never rejects.
 
-Values cross as EDN text, the same text a run record holds. Map keys come out
-in canonical order.
+Neither throws for a mistake in the input: that's `{"error": "…"}`. The
+operations are the engine's own (`crates/actions/src/api.rs`).
+[`packages/actions`](../../packages/actions) wraps them for a host.
 
 Workspace's apps load one native library for both `.table` formulas and
-actions. This add-on is the Linux build of the actions half until the two are
-packaged together.
+actions. This add-on is the Linux build of the actions half until the two
+are packaged together.

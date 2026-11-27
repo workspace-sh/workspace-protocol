@@ -533,6 +533,7 @@ name = "workspace-actions"
 version = "0.1.0"
 dependencies = [
  "jiff",
+ "serde_json",
  "workspace-edn",
 ]
 
@@ -540,13 +541,10 @@ dependencies = [
 name = "workspace-actions-node"
 version = "0.1.0"
 dependencies = [
- "jiff",
  "napi",
  "napi-build",
  "napi-derive",
- "serde_json",
  "workspace-actions",
- "workspace-edn",
 ]
 
 [[package]]

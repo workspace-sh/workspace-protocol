@@ -11,10 +11,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 workspace-actions = { path = "../actions" }
-jiff = "0.2"
-# The same commit the engine pins, so Cargo builds it once.
-workspace-edn = { git = "https://github.com/workspace-sh/table-file-format", rev = "0ad4e9a9d69207045a37b6a9d318a7c3e716a71f" }
-serde_json = "1"
 napi = { version = "3", default-features = false, features = ["napi4"] }
 napi-derive = "3"
 

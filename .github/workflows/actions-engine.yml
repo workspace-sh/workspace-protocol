@@ -2,10 +2,10 @@ name: actions-engine
 
 on:
   pull_request:
-    paths: ["crates/actions/**", "crates/actions-node/**", "packages/actions/**", ".github/workflows/actions-engine.yml"]
+    paths: ["crates/actions/**", "crates/actions-node/**", "crates/actions-ffi/**", "packages/actions/**", ".github/workflows/actions-engine.yml"]
   push:
     branches: [develop]
-    paths: ["crates/actions/**", "crates/actions-node/**", "packages/actions/**", ".github/workflows/actions-engine.yml"]
+    paths: ["crates/actions/**", "crates/actions-node/**", "crates/actions-ffi/**", "packages/actions/**", ".github/workflows/actions-engine.yml"]
 
 permissions:
   contents: read
@@ -23,6 +23,21 @@ jobs:
           components: rustfmt, clippy
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  ffi:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crates/actions-ffi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo build
       - run: cargo test
 
   node:

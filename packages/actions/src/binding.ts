@@ -4,26 +4,55 @@ import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
-export interface Described {
-    id: string;
-    on: "open" | "tap" | "edit" | "change" | "at" | "cron" | "none" | "unknown";
-    fresh?: string | null;
+/**
+ * The engine, as its binding gives it: one call, an operation's name and
+ * JSON text in, JSON text out (workspace-protocol's `crates/actions`,
+ * `api.rs`). Everything about actions is decided in there; this package only
+ * performs what an action asks for and passes the results back.
+ */
+export interface ActionsBinding {
+    /** Run an operation now. For everything quick: reading, planning, answering, writing back. */
+    call(op: string, input: string): string;
+    /** Run an operation on a worker thread, stopped after `timeoutMs`: for `run` and `check`. */
+    callWithin(op: string, input: string, timeoutMs: number): Promise<string>;
+}
+
+/** What an action may ask for, declared by it or granted by a device. */
+export interface Needs {
     fetch: string[];
     read: string[];
     locate: boolean;
     ask: boolean;
 }
 
-export interface ActionsBinding {
-    /** One run, resolving to the outcome as EDN. Never rejects. */
-    run(action: string, input: string, timeoutMs: number): Promise<string>;
-    /** Whether the action is due, as EDN (`{:due :now}` or `{:due :later …}`). */
-    due(action: string, lastRun: string | null, now: string, localZone: string | null): string;
-    describe(action: string): Described;
-    /** The value at a keyword in an EDN map, as EDN, or null. */
-    get(edn: string, key: string): string | null;
-    jsonToEdn(json: string): string;
-    ednToJson(edn: string): string;
+export interface Described {
+    id: string;
+    on: "open" | "tap" | "edit" | "change" | "at" | "cron" | "none" | "unknown";
+    /** The field, file or moment its trigger names, if it names one. */
+    of: string | null;
+    fresh: string | null;
+    needs: Needs;
+}
+
+function result<T>(op: string, out: string): T {
+    const parsed = JSON.parse(out) as T & { error?: string };
+    if (typeof parsed.error === "string") throw new Error(`actions ${op}: ${parsed.error}`);
+    return parsed;
+}
+
+/** Call an operation and read its answer. Throws with the engine's message when it refuses the input. */
+export function op<T>(b: ActionsBinding, name: string, input: unknown): T {
+    return result<T>(name, b.call(name, JSON.stringify(input)));
+}
+
+/** The same, for an operation that runs an action. */
+export async function opWithin<T>(b: ActionsBinding, name: string, input: unknown, timeoutMs: number): Promise<T> {
+    return result<T>(name, await b.callWithin(name, JSON.stringify(input), timeoutMs));
+}
+
+/** Read an action without running it. */
+export function describe(b: ActionsBinding, edn: string): Described {
+    return op<Described>(b, "describe", { edn });
 }
 
 /** The file name the build gives the binding for this machine. */
