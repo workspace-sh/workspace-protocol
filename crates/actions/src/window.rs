@@ -67,7 +67,7 @@ pub fn due(
         Trigger::Cron(cron, zone) => {
             let tz = zone.resolve(local_zone)?;
             match cron.slot_at(now, &tz) {
-                Some(slot) if last_run.map_or(true, |l| l < slot) => {
+                Some(slot) if last_run.is_none_or(|l| l < slot) => {
                     Ok(Due::Now { slot: Some(slot) })
                 }
                 _ => Ok(Due::Later {

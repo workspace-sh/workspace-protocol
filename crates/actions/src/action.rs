@@ -643,7 +643,7 @@ impl<'a> Machine<'a> {
 
     fn step(&mut self) -> R<()> {
         self.steps += 1;
-        if self.steps % INTERRUPT_EVERY == 0 && (self.interrupt)() {
+        if self.steps.is_multiple_of(INTERRUPT_EVERY) && (self.interrupt)() {
             return Err(Stop::Failed(
                 "timeout".into(),
                 "the run was stopped: it took longer than this device allows".into(),
@@ -786,7 +786,7 @@ impl<'a> Machine<'a> {
                 }
                 let mut inner = scope.clone();
                 for pair in bindings.chunks(2) {
-                    check_pattern(&pair[0]).or_else(|m| fail(m))?;
+                    check_pattern(&pair[0]).or_else(fail)?;
                     let v = self.eval(&pair[1], &inner)?;
                     inner = self.bind(&pair[0], v, inner)?;
                 }
@@ -840,7 +840,7 @@ impl<'a> Machine<'a> {
                     return fail("fn takes [params] and a body");
                 };
                 for p in params {
-                    check_pattern(p).or_else(|m| fail(m))?;
+                    check_pattern(p).or_else(fail)?;
                 }
                 Ok(Val::Fn(Rc::new(Closure {
                     params: params.clone(),
