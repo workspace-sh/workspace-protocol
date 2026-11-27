@@ -88,7 +88,10 @@ const INTERRUPT_EVERY: u64 = 1024;
 /// granted by this device in the same shape. A request needs both.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Needs {
-    /// Hosts that `env/fetch` may GET from, exactly (`nominatim.openstreetmap.org`).
+    /// What `env/fetch` may reach. A host alone (`nominatim.openstreetmap.org`)
+    /// may be read from, with GET and HEAD. Changing something there needs
+    /// the method too, written `[:post "api.example.org"]` and held here as
+    /// `POST api.example.org`.
     pub fetch: Vec<String>,
     /// Files that `env/read` may read, by path relative to the document.
     pub read: Vec<String>,
@@ -105,7 +108,7 @@ impl Needs {
         };
         for (k, v) in entries {
             match k {
-                Value::Keyword(k) if k == "fetch" => needs.fetch = strings(v, ":needs :fetch")?,
+                Value::Keyword(k) if k == "fetch" => needs.fetch = fetch_entries(v)?,
                 Value::Keyword(k) if k == "read" => needs.read = strings(v, ":needs :read")?,
                 Value::Keyword(k) if k == "locate" => needs.locate = v == &Value::Bool(true),
                 Value::Keyword(k) if k == "ask" => needs.ask = v == &Value::Bool(true),
@@ -145,6 +148,58 @@ fn strings(v: &Value, what: &str) -> Result<Vec<String>, String> {
         _ => Err(format!("{what} is a list of strings")),
     }
 }
+
+/// The methods `env/fetch` can use. GET and HEAD only read.
+pub const METHODS: &[&str] = &["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"];
+
+/// `:needs :fetch`: each entry a host, or a method and a host.
+fn fetch_entries(v: &Value) -> Result<Vec<String>, String> {
+    let bad = || {
+        ":needs :fetch is a list of hosts, each \"host\" to read from it or [:post \"host\"] to send to it".to_string()
+    };
+    let (Value::Vector(xs) | Value::List(xs) | Value::Set(xs)) = v else {
+        return Err(bad());
+    };
+    xs.iter()
+        .map(|x| match x {
+            Value::Str(s) => match s.split_once(' ') {
+                None => Ok(s.clone()),
+                Some((m, host)) if METHODS.contains(&m) && !host.contains(' ') => Ok(s.clone()),
+                Some(_) => Err(bad()),
+            },
+            Value::Vector(pair) => match pair.as_slice() {
+                [Value::Keyword(m), Value::Str(host)]
+                    if METHODS.contains(&m.to_ascii_uppercase().as_str()) =>
+                {
+                    let m = m.to_ascii_uppercase();
+                    Ok(if m == "GET" || m == "HEAD" {
+                        host.clone()
+                    } else {
+                        format!("{m} {host}")
+                    })
+                }
+                _ => Err(bad()),
+            },
+            _ => Err(bad()),
+        })
+        .collect()
+}
+
+/// Headers an action may not set: who the request is from and how it's
+/// carried are the app's to say, never the action's.
+const APP_HEADERS: &[&str] = &[
+    "authorization",
+    "cookie",
+    "host",
+    "user-agent",
+    "content-length",
+    "connection",
+    "proxy-authorization",
+    "transfer-encoding",
+    "upgrade",
+    "origin",
+    "referer",
+];
 
 /// A path inside the workspace: relative, with no `..`, no empty part and no backslash.
 fn relative_path(p: &str) -> bool {
@@ -940,34 +995,134 @@ impl<'a> Machine<'a> {
         let granted = self.input.granted_for(&self.action.needs);
         let refused = |m: String, s: Vec<String>| Err(Stop::Failed("refused".into(), m, s));
         let request = match (verb, args.as_slice()) {
-            ("fetch", [Value::Str(url), rest @ ..]) if rest.len() <= 1 => {
+            ("fetch", [Value::Str(url), rest @ ..]) if rest.len() <= 2 => {
                 let Some(host) = https_host(url) else {
                     return fail(format!("{url:?} isn't an https:// address"));
                 };
-                if !self.action.needs.fetch.iter().any(|h| h == host) {
+                let options = match rest.get(1) {
+                    None | Some(Value::Nil) => &[][..],
+                    Some(Value::Map(entries)) => entries.as_slice(),
+                    Some(_) => return fail(
+                        "env/fetch's third argument is a map: {:method :post :body … :headers {…}}",
+                    ),
+                };
+                let option = |name: &str| {
+                    options
+                        .iter()
+                        .find(|(k, _)| matches!(k, Value::Keyword(k) if k == name))
+                        .map(|(_, v)| v)
+                };
+                if let Some((k, _)) = options.iter().find(|(k, _)| {
+                    !matches!(k, Value::Keyword(k) if ["method", "body", "headers"].contains(&k.as_str()))
+                }) {
+                    return fail(format!("env/fetch takes :method, :body and :headers, not {}", print(k)));
+                }
+                let method = match option("method") {
+                    None => "GET".to_string(),
+                    Some(Value::Keyword(m))
+                        if METHODS.contains(&m.to_ascii_uppercase().as_str()) =>
+                    {
+                        m.to_ascii_uppercase()
+                    }
+                    Some(other) => {
+                        return fail_suggesting(
+                            format!("{} isn't a method env/fetch can use", print(other)),
+                            METHODS
+                                .iter()
+                                .map(|m| format!(":{}", m.to_ascii_lowercase()))
+                                .collect(),
+                        )
+                    }
+                };
+                let reads = method == "GET" || method == "HEAD";
+                let entry = if reads {
+                    host.to_string()
+                } else {
+                    format!("{method} {host}")
+                };
+                let written = if reads {
+                    format!("\"{host}\"")
+                } else {
+                    format!("[:{} \"{host}\"]", method.to_ascii_lowercase())
+                };
+                if !self.action.needs.fetch.contains(&entry) {
+                    let what = if reads {
+                        format!("fetching from {host}")
+                    } else {
+                        format!("sending to {host} with {method}")
+                    };
                     return refused(
-                        format!("the action doesn't declare fetching from {host}; add it to :needs :fetch"),
-                        closest(host, &self.action.needs.fetch),
+                        format!(
+                            "the action doesn't declare {what}; add {written} to :needs :fetch"
+                        ),
+                        closest(&entry, &self.action.needs.fetch),
                     );
                 }
-                if !granted.fetch.iter().any(|h| h == host) {
-                    return refused(
-                        format!("this device hasn't let the action fetch from {host}"),
-                        vec![],
-                    );
+                if !granted.fetch.contains(&entry) {
+                    let what = if reads {
+                        format!("fetch from {host}")
+                    } else {
+                        format!("send to {host} with {method}")
+                    };
+                    return refused(format!("this device hasn't let the action {what}"), vec![]);
                 }
                 let mut r = vec![
                     (kw("op"), kw("fetch")),
                     (kw("url"), Value::Str(url.clone())),
                 ];
+                // A plain GET is written as it always was, so its record reads the same.
+                if method != "GET" {
+                    r.push((kw("method"), kw(&method.to_ascii_lowercase())));
+                }
                 match rest.first() {
-                    None => {}
+                    None | Some(Value::Nil) => {}
                     Some(q @ Value::Map(_)) => r.push((kw("query"), q.clone())),
                     Some(_) => {
                         return fail(
-                            "env/fetch takes an address and an optional map of query parameters",
+                            "env/fetch takes an address, an optional map of query parameters, and an optional map of :method, :body and :headers",
                         )
                     }
+                }
+                if let Some(body) = option("body") {
+                    if reads {
+                        return fail(format!("a {method} has no :body"));
+                    }
+                    r.push((kw("body"), body.clone()));
+                }
+                match option("headers") {
+                    None => {}
+                    Some(Value::Map(headers)) => {
+                        let mut lowered = Vec::new();
+                        for (k, v) in headers {
+                            let (Value::Str(name) | Value::Keyword(name), Value::Str(value)) =
+                                (k, v)
+                            else {
+                                return fail(":headers is a map from a header's name to its text");
+                            };
+                            let name = name.to_ascii_lowercase();
+                            let token = !name.is_empty()
+                                && name.bytes().all(|b| {
+                                    b.is_ascii_alphanumeric() || b"!#$%&'*+-.^_`|~".contains(&b)
+                                });
+                            if !token || value.bytes().any(|b| b == b'\r' || b == b'\n' || b == 0) {
+                                return fail(format!(
+                                    "{name:?} isn't a header an action can send as written"
+                                ));
+                            }
+                            if APP_HEADERS.contains(&name.as_str())
+                                || name.starts_with("sec-")
+                                || name.starts_with("proxy-")
+                            {
+                                return refused(
+                                    format!("an action can't set the {name} header: that's the app's to send"),
+                                    vec![],
+                                );
+                            }
+                            lowered.push((Value::Str(name), Value::Str(value.clone())));
+                        }
+                        r.push((kw("headers"), Value::Map(lowered)));
+                    }
+                    Some(_) => return fail(":headers is a map from a header's name to its text"),
                 }
                 Value::Map(r)
             }

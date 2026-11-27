@@ -297,7 +297,7 @@ fn pairs(input: &J) -> Result<Vec<(String, String)>, String> {
     Ok(out)
 }
 
-fn outcome_of(input: &J, interrupt: &mut dyn FnMut() -> bool) -> Result<Outcome, String> {
+fn outcome_of(input: &J, interrupt: &mut dyn FnMut() -> bool) -> Result<(Outcome, Needs), String> {
     let action = parse_action(text(input, "edn")?).map_err(|e| e.to_string())?;
     let mut run_input = read_input(input.get("input").and_then(J::as_str).unwrap_or("{}"))?;
     let answers = pairs(input)?;
@@ -312,21 +312,24 @@ fn outcome_of(input: &J, interrupt: &mut dyn FnMut() -> bool) -> Result<Outcome,
         .get("maxRequests")
         .and_then(J::as_u64)
         .map_or(MAX_REQUESTS, |n| n as usize);
-    Ok(
-        match run(&action, &run_input, Limits::default(), interrupt) {
-            Outcome::Needs { asked, .. } if answers.len() >= max => Outcome::Failed {
-                reason: "limit".into(),
-                message: format!("it made more than {max} requests"),
-                suggestions: vec![],
-                asked,
-            },
-            other => other,
+    let outcome = match run(&action, &run_input, Limits::default(), interrupt) {
+        Outcome::Needs { asked, .. } if answers.len() >= max => Outcome::Failed {
+            reason: "limit".into(),
+            message: format!("it made more than {max} requests"),
+            suggestions: vec![],
+            asked,
         },
-    )
+        other => other,
+    };
+    Ok((outcome, run_input.granted))
 }
 
 fn run_op(input: &J, interrupt: &mut dyn FnMut() -> bool) -> Result<J, String> {
-    let outcome = outcome_of(input, interrupt)?;
+    let (outcome, granted) = outcome_of(input, interrupt)?;
+    let fetch_timeout = input
+        .get("fetchTimeoutMs")
+        .and_then(J::as_u64)
+        .unwrap_or(FETCH_TIMEOUT_MS);
     let asked = |a: &[(Value, Value)]| {
         print(&Value::Vector(
             a.iter()
@@ -349,6 +352,7 @@ fn run_op(input: &J, interrupt: &mut dyn FnMut() -> bool) -> Result<J, String> {
         Outcome::Needs { request, asked: a } => {
             let mut j = to_json(request);
             if let Some(href) = href(request) {
+                j["http"] = http(request, &href, &granted, fetch_timeout);
                 j["href"] = json!(href);
             }
             json!({ "status": "needs", "requestEdn": print(request), "request": j, "asked": asked(a) })
@@ -403,6 +407,74 @@ fn href(request: &Value) -> Option<String> {
     Some(out)
 }
 
+/// How long one fetch may take, unless the app says otherwise.
+const FETCH_TIMEOUT_MS: u64 = 10_000;
+/// The most a response may hold. A larger one fails as `error`.
+pub const MAX_RESPONSE_BYTES: u64 = 5 * 1024 * 1024;
+/// How an action's requests name themselves to a server.
+pub const USER_AGENT: &str = "workspace-actions/1";
+
+/// A fetch exactly as it goes on the wire, so every platform sends the same
+/// bytes whatever carries them (`docs/actions/http.md`):
+///
+/// - `method`, `url` (query included) and `headers`, lower-case, in order.
+/// - `body`: the text to send, or null. An action's string is sent as it is
+///   (`text/plain`); any other value is sent as JSON.
+/// - `timeoutMs` for the whole exchange, and `maxBytes` of response.
+/// - `redirectHosts`: the hosts a redirect may lead to, over https, at most
+///   `maxRedirects` times. A request that isn't a GET or HEAD follows none.
+fn http(request: &Value, href: &str, granted: &Needs, timeout_ms: u64) -> J {
+    let method = match get(request, "method") {
+        Some(Value::Keyword(m)) => m.to_ascii_uppercase(),
+        _ => "GET".into(),
+    };
+    let mut headers: Vec<(String, String)> = Vec::new();
+    if let Some(Value::Map(given)) = get(request, "headers") {
+        for (k, v) in given {
+            if let (Value::Str(k), Value::Str(v)) = (k, v) {
+                headers.push((k.clone(), v.clone()));
+            }
+        }
+    }
+    let has = |headers: &[(String, String)], name: &str| headers.iter().any(|(k, _)| k == name);
+    let body = match get(request, "body") {
+        None => None,
+        Some(Value::Str(text)) => {
+            if !has(&headers, "content-type") {
+                headers.push(("content-type".into(), "text/plain; charset=utf-8".into()));
+            }
+            Some(text.clone())
+        }
+        Some(value) => {
+            if !has(&headers, "content-type") {
+                headers.push(("content-type".into(), "application/json".into()));
+            }
+            Some(to_json(value).to_string())
+        }
+    };
+    if !has(&headers, "accept") {
+        headers.push(("accept".into(), "application/json".into()));
+    }
+    headers.push(("user-agent".into(), USER_AGENT.into()));
+    headers.sort();
+    let reads = method == "GET" || method == "HEAD";
+    let redirect_hosts: Vec<&String> = if reads {
+        granted.fetch.iter().filter(|h| !h.contains(' ')).collect()
+    } else {
+        Vec::new()
+    };
+    json!({
+        "method": method,
+        "url": href,
+        "headers": headers.iter().map(|(k, v)| json!([k, v])).collect::<Vec<_>>(),
+        "body": body,
+        "timeoutMs": timeout_ms,
+        "maxBytes": MAX_RESPONSE_BYTES,
+        "maxRedirects": if reads { 5 } else { 0 },
+        "redirectHosts": redirect_hosts,
+    })
+}
+
 /// Percent-encode a query's name or value (RFC 3986's unreserved characters stay).
 fn encode(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
@@ -452,7 +524,19 @@ fn answer_op(input: &J) -> Result<J, String> {
     } else if let Some(status) = input.get("status").and_then(J::as_u64) {
         let body = input.get("body").and_then(J::as_str).unwrap_or("");
         if (200..300).contains(&status) {
-            value(read_json(body).unwrap_or_else(|_| Value::Str(body.to_string())))
+            if body.len() as u64 > MAX_RESPONSE_BYTES {
+                failed(
+                    "error",
+                    format!(
+                        "the answer was larger than {} MB",
+                        MAX_RESPONSE_BYTES / 1024 / 1024
+                    ),
+                )
+            } else if body.trim().is_empty() {
+                value(Value::Nil)
+            } else {
+                value(read_json(body).unwrap_or_else(|_| Value::Str(body.to_string())))
+            }
         } else {
             let host = get(&request, "url")
                 .and_then(|u| {

@@ -278,3 +278,90 @@ fn a_mistake_is_an_error_not_a_crash() {
         assert!(out["error"].is_string(), "{op} {input}: {out}");
     }
 }
+
+#[test]
+fn sending_needs_the_method_declared_and_granted_and_goes_out_the_same_everywhere() {
+    let edn = r#"{:id :t/post :needs {:fetch ["api.example" [:post "api.example"]]}
+      :fn (fn [r env ctx] {:keep (:id (env/fetch "https://api.example/items" {:dry true}
+                                      {:method :post :body {:name "Dune" :tags ["a" "b"]} :headers {"X-Trace" "abc"}}))})}"#;
+    // Granted reading only: the POST is refused before the app is asked.
+    let refused = c(
+        "run",
+        json!({ "edn": edn, "input": r#"{:granted {:fetch ["api.example"]}}"# }),
+    );
+    assert_eq!(refused["reason"], "refused", "{refused}");
+    assert_eq!(
+        refused["message"],
+        "this device hasn't let the action send to api.example with POST"
+    );
+
+    let out = c(
+        "run",
+        json!({ "edn": edn, "input": r#"{:granted {:fetch ["api.example" "POST api.example"]}}"# }),
+    );
+    assert_eq!(out["status"], "needs", "{out}");
+    assert_eq!(
+        out["request"]["http"],
+        json!({
+            "method": "POST",
+            "url": "https://api.example/items?dry=true",
+            "headers": [["accept", "application/json"], ["content-type", "application/json"], ["user-agent", "workspace-actions/1"], ["x-trace", "abc"]],
+            "body": r#"{"name":"Dune","tags":["a","b"]}"#,
+            "timeoutMs": 10000,
+            "maxBytes": 5242880,
+            "maxRedirects": 0,
+            "redirectHosts": [],
+        })
+    );
+    let a = c(
+        "answer",
+        json!({ "requestEdn": out["requestEdn"], "status": 201, "body": r#"{"id":7}"# }),
+    );
+    let done = c(
+        "run",
+        json!({ "edn": edn, "input": r#"{:granted {:fetch ["api.example" "POST api.example"]}}"#, "answers": [[out["requestEdn"], a["answerEdn"]]] }),
+    );
+    assert_eq!(done["keepEdn"], "7");
+}
+
+#[test]
+fn an_action_cant_send_the_apps_headers_or_an_undeclared_method() {
+    let run = |body: &str| {
+        let edn = format!(
+            r#"{{:id :t/x :needs {{:fetch ["a.example" [:put "a.example"]]}} :fn (fn [r env ctx] {{:keep {body}}})}}"#
+        );
+        c(
+            "run",
+            json!({ "edn": edn, "input": r#"{:granted {:fetch ["a.example" "PUT a.example"]}}"# }),
+        )
+    };
+    let auth =
+        run(r#"(env/fetch "https://a.example/" nil {:headers {"Authorization" "Bearer x"}})"#);
+    assert_eq!(auth["reason"], "refused", "{auth}");
+    let delete = run(r#"(env/fetch "https://a.example/" nil {:method :delete})"#);
+    assert_eq!(delete["reason"], "refused", "{delete}");
+    assert!(
+        delete["message"]
+            .as_str()
+            .unwrap()
+            .contains(r#"add [:delete "a.example"] to :needs :fetch"#),
+        "{delete}"
+    );
+    let get_body = run(r#"(env/fetch "https://a.example/" nil {:body "x"})"#);
+    assert_eq!(get_body["reason"], "failed");
+    let put = run(r#"(env/fetch "https://a.example/" nil {:method :put :body "plain"})"#);
+    assert_eq!(
+        put["request"]["http"]["headers"][1],
+        json!(["content-type", "text/plain; charset=utf-8"])
+    );
+    let get = run(r#"(env/fetch "https://a.example/x")"#);
+    assert_eq!(get["request"]["http"]["maxRedirects"], 5);
+    assert_eq!(
+        get["request"]["http"]["redirectHosts"],
+        json!(["a.example"])
+    );
+    assert_eq!(
+        get["requestEdn"], r#"{:op :fetch :url "https://a.example/x"}"#,
+        "a plain GET's record is as it was"
+    );
+}
