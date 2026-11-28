@@ -3,10 +3,14 @@
 // actions; an app performs what an action asks for (the network, a file, the
 // clock, its locale, the screen) and passes the results back.
 //
-// To use it, link the static library `libworkspace_actions_ffi.a` and
-// expose the header to Swift, through a module map or a bridging header.
+// To use it, link the engine and expose its header to Swift: the framework
+// `build-apple.sh` makes (module `WorkspaceActionsCore`), or the static
+// library `libworkspace_actions_ffi.a` with a module map or a bridging header.
 
 import Foundation
+#if canImport(WorkspaceActionsCore)
+import WorkspaceActionsCore
+#endif
 
 public enum WorkspaceActions {
     /// The engine refused the input: the message says what was wrong with it.

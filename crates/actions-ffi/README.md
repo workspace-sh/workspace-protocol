@@ -25,8 +25,19 @@ cargo build --release   # target/release/libworkspace_actions_ffi.{a,so,dylib}
 cargo test              # builds c-test/main.c against the library and runs it
 ```
 
-The Rust and C sides are tested on Linux. The Swift file hasn't been
-compiled yet: it needs an Apple toolchain.
+For the iOS and Mac apps, `build-apple.sh` builds the engine into
+`apple/WorkspaceActionsCore.xcframework`, a dynamic framework for the
+iPhone, the Simulator and the Mac (Apple silicon). Swift imports it as the
+module `WorkspaceActionsCore`. It's dynamic because each Rust static library
+carries its own copy of Rust's runtime, and an app linking two fails on
+duplicate symbols.
+
+```sh
+sh build-apple.sh       # apple/WorkspaceActionsCore.xcframework
+```
+
+The Rust and C sides are tested on Linux. The Swift wrapper is compiled
+with Swift 6 against the framework for all three, and run on the Mac.
 
 Workspace's apps link one native library for both `.table` formulas and
 actions; this crate is also a Rust library so that build can include it.

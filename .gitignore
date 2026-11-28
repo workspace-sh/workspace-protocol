@@ -9,3 +9,6 @@ dist
 
 # Rust
 crates/*/target/
+
+# The Apple frameworks build-apple.sh makes
+crates/actions-ffi/apple/
