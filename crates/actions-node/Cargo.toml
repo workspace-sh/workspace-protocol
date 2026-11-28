@@ -1,0 +1,25 @@
+[package]
+name = "workspace-actions-node"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Native Node binding of workspace-actions (N-API), for the Linux app and the CLI"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+workspace-actions-http = { path = "../actions-http" }
+napi = { version = "3", default-features = false, features = ["napi4"] }
+napi-derive = "3"
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
