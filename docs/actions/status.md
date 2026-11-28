@@ -93,8 +93,10 @@ Done:
   - building each request and reading its answer;
   - writing and checking a run's record.
 - Bindings of that one call: Node (the Linux app, the command line) and
-  C, with a Swift wrapper. The Linux app refreshes a Markdown document's
-  kept values when it opens.
+  C, with a Swift wrapper. The Linux app keeps a Markdown document's and
+  a canvas's kept values fresh while it is on screen: as it opens, when
+  a clock comes due, and when a file an action names changes. It reads
+  files and `.table`s for `env/read`.
 - Fetching is the engine's own too ([Fetching](./http.md)): one HTTP
   client and one set of rules on every platform, with reading and
   sending granted apart.
@@ -106,8 +108,9 @@ Next:
 - The Swift wrapper built and run on iOS and macOS.
 - One native library holding this and the `.table` core, so an app has
   the shared EDN reader once.
-- `:tap`, `[:edit …]` and `[:change …]` raised by the apps, and Canvas
-  and `.table` documents refreshed as Markdown is.
+- `:tap` and `[:edit …]` raised by the apps, which needs the mark a
+  kept value is tapped by, and `.table` documents refreshed as Markdown
+  and Canvas are.
 - Where a run's full record is kept: the document holds the short form
   (the marker), and the workspace's log is to design.
 
