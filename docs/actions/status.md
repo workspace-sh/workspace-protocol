@@ -96,7 +96,9 @@ Done:
   C, with a Swift wrapper. The Linux app keeps a Markdown document's and
   a canvas's kept values fresh while it is on screen: as it opens, when
   a clock comes due, and when a file an action names changes. It reads
-  files and `.table`s for `env/read`.
+  files and `.table`s for `env/read`. In a Markdown document it marks
+  each kept value (underlined, with when it was kept and by what), and a
+  click on one whose action runs on a tap runs it.
 - Fetching is the engine's own too ([Fetching](./http.md)): one HTTP
   client and one set of rules on every platform, with reading and
   sending granted apart.
@@ -108,9 +110,9 @@ Next:
 - The Swift wrapper built and run on iOS and macOS.
 - One native library holding this and the `.table` core, so an app has
   the shared EDN reader once.
-- `:tap` and `[:edit …]` raised by the apps, which needs the mark a
-  kept value is tapped by, and `.table` documents refreshed as Markdown
-  and Canvas are.
+- `:tap` on a canvas node, `[:edit …]`, and `.table` documents
+  refreshed as Markdown and Canvas are.
+- A kept value marked as stale, and the mark on iOS and macOS.
 - Where a run's full record is kept: the document holds the short form
   (the marker), and the workspace's log is to design.
 
