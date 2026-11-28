@@ -53,6 +53,10 @@ pub struct Exchange {
     pub timeout: Duration,
     /// The most of the response's body to read.
     pub max_bytes: u64,
+    /// The proxy to send it through, as the app read it from the system's
+    /// settings: `http://host:port`. None is the environment's, if it names
+    /// one (`HTTPS_PROXY`, `ALL_PROXY`).
+    pub proxy: Option<String>,
 }
 
 /// What came back from one exchange.
@@ -87,7 +91,13 @@ pub struct Client;
 
 impl Wire for Client {
     fn send(&self, x: &Exchange) -> Result<Reply, Failure> {
-        let agent: ureq::Agent = ureq::Agent::config_builder()
+        let mut config = ureq::Agent::config_builder();
+        if let Some(proxy) = &x.proxy {
+            let proxy = ureq::Proxy::new(proxy)
+                .map_err(|e| Failure::Other(format!("the proxy {proxy:?} can't be used: {e}")))?;
+            config = config.proxy(Some(proxy));
+        }
+        let agent: ureq::Agent = config
             .timeout_global(Some(x.timeout))
             .max_redirects(0)
             .max_redirects_will_error(false)
@@ -296,6 +306,7 @@ pub fn perform_with(
                 .saturating_sub(started.elapsed())
                 .max(Duration::from_millis(1)),
             max_bytes,
+            proxy: text("proxy").filter(|p| !p.is_empty()).map(str::to_string),
         };
         let reply = match wire.send(&exchange) {
             Ok(r) => r,

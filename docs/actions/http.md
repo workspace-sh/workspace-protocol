@@ -75,6 +75,16 @@ It runs wherever a program can open a socket: Linux, macOS, iOS,
 Android, Windows, a command line, a Lighthouse. A browser can't, so a
 web app puts the browser's `fetch` under the same rules as its wire.
 
-Not yet: HTTP/2, proxies set by the app, and a response that isn't text.
+**Proxies.** A device may send its traffic through a proxy. Where that
+is in the environment (`HTTPS_PROXY`, `ALL_PROXY`), as on Linux and a
+command line, the client follows it by itself. Where it is in the
+system's settings or decided per address by a script, as on iOS and
+macOS, the app asks the system which proxy that address takes and adds
+it to the request as `proxy` (`http://host:port`). The same proxy
+carries the request's redirects. A VPN needs nothing: it routes
+underneath.
+
+Not yet: HTTP/2, SOCKS proxies, a proxy that asks for a password, and a
+response that isn't text.
 
 Up: [Workspace actions](./README.md) · [All docs](../README.md)

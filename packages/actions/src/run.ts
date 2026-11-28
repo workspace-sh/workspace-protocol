@@ -13,6 +13,8 @@ export interface HttpDescription {
     maxBytes: number;
     maxRedirects: number;
     redirectHosts: string[];
+    /** The proxy to send it through (`http://host:port`), added by the host from the system's settings. Left out, the environment's. */
+    proxy?: string;
 }
 
 /** A request, as the engine hands it to the host. */

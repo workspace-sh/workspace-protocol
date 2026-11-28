@@ -423,6 +423,9 @@ pub const USER_AGENT: &str = "workspace-actions/1";
 /// - `timeoutMs` for the whole exchange, and `maxBytes` of response.
 /// - `redirectHosts`: the hosts a redirect may lead to, over https, at most
 ///   `maxRedirects` times. A request that isn't a GET or HEAD follows none.
+///
+/// The app may add `proxy` (`http://host:port`) before it's sent, from the
+/// system's settings; the engine never sets it.
 fn http(request: &Value, href: &str, granted: &Needs, timeout_ms: u64) -> J {
     let method = match get(request, "method") {
         Some(Value::Keyword(m)) => m.to_ascii_uppercase(),

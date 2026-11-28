@@ -17,6 +17,12 @@ export interface HostOptions {
     readFile?: (path: string) => Promise<string>;
     /** Read a `.table` by its path relative to the document. */
     readTable?: (path: string) => Promise<TableFiles>;
+    /**
+     * The proxy the system would send this address through
+     * (`http://host:port`), or null for none: for a platform whose proxy is
+     * in its settings, or decided per address, not in the environment.
+     */
+    proxyFor?: (url: string) => string | null;
     /** Carry a fetch some other way: for a test, or a platform that can't open a socket. */
     http?: (description: HttpDescription) => Promise<Performed>;
 }
@@ -24,10 +30,12 @@ export interface HostOptions {
 export function hostPerformer(b: ActionsBinding, o: HostOptions): Perform {
     return async (r: Request): Promise<Performed> => {
         switch (r.op) {
-            case "fetch":
+            case "fetch": {
                 if (o.http) return o.http(r.http);
                 // A little longer than the fetch's own timeout, so the client's answer is the one that's heard.
-                return opWithin<Performed>(b, "http", r.http, r.http.timeoutMs + 2_000);
+                const proxy = o.proxyFor?.(r.http.url) ?? null;
+                return opWithin<Performed>(b, "http", proxy === null ? r.http : { ...r.http, proxy }, r.http.timeoutMs + 2_000);
+            }
             case "now":
                 return { text: (o.now ?? (() => new Date()))().toISOString() };
             case "format":

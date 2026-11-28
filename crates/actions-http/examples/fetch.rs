@@ -2,7 +2,8 @@
 //!
 //!     cargo run --example fetch -- GET https://example.com/
 //!
-//! Prints what `answer` would be given.
+//! Prints what `answer` would be given. `FETCH_PROXY=http://host:port` sends
+//! it through that proxy, as an app does with the system's.
 
 use serde_json::json;
 
@@ -25,6 +26,7 @@ fn main() {
         "body": args.next(), "timeoutMs": 10000,
         "maxBytes": workspace_actions::api::MAX_RESPONSE_BYTES,
         "maxRedirects": if reads { 5 } else { 0 }, "redirectHosts": [host],
+        "proxy": std::env::var("FETCH_PROXY").ok(),
     }));
     let mut text = out.to_string();
     if text.len() > 400 {

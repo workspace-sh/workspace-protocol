@@ -222,3 +222,21 @@ fn a_request_that_would_wait_past_its_timeout_isnt_sent() {
     );
     assert_eq!(waited.len(), 1);
 }
+
+#[test]
+fn a_proxy_the_app_names_goes_with_every_hop_and_none_means_the_environments() {
+    let wire = Script::new(vec![to("https://b.example/x"), ok("{}")]);
+    let mut d = get("https://a.example/x", &["b.example"]);
+    d["proxy"] = json!("http://proxy.example:8080");
+    assert_eq!(run(&wire, &d)["status"], 200);
+    let sent = wire.sent.borrow();
+    assert_eq!(sent.len(), 2);
+    assert!(sent
+        .iter()
+        .all(|x| x.proxy.as_deref() == Some("http://proxy.example:8080")));
+    drop(sent);
+
+    let wire = Script::new(vec![ok("{}")]);
+    run(&wire, &get("https://a.example/x", &[]));
+    assert_eq!(wire.sent.borrow()[0].proxy, None);
+}
