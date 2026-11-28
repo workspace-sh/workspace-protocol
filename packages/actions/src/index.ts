@@ -1,4 +1,4 @@
-export { bindingFile, describe, findBinding, loadBinding, op, opWithin, type ActionsBinding, type Described, type Needs } from "./binding.ts";
+export { describe, op, opWithin, type ActionsBinding, type Described, type Needs } from "./binding.ts";
 export {
     runToEnd,
     type FailedReason,

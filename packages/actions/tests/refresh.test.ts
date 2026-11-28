@@ -3,7 +3,8 @@
 // in `crates/actions`; this checks the host's half, performing and passing on.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { describe, findBinding, hostPerformer, opWithin, refresh, type HttpDescription, type Perform, type Performed } from "../src/index.ts";
+import { describe, hostPerformer, opWithin, refresh, type HttpDescription, type Perform, type Performed } from "../src/index.ts";
+import { findBinding } from "../src/node.ts";
 
 const found = findBinding();
 if (found === null) throw new Error("build the binding first: npm run build in crates/actions-node");
