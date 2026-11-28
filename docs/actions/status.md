@@ -98,7 +98,8 @@ Done:
   a clock comes due, and when a file an action names changes. It reads
   files and `.table`s for `env/read`. In a Markdown document it marks
   each kept value (underlined, with when it was kept and by what), and a
-  click on one whose action runs on a tap runs it.
+  click on one whose action runs on a tap runs it. A value that
+  couldn't be refreshed is shown as it was, marked stale.
 - Fetching is the engine's own too ([Fetching](./http.md)): one HTTP
   client and one set of rules on every platform, with reading and
   sending granted apart.
@@ -112,7 +113,7 @@ Next:
   the shared EDN reader once.
 - `:tap` on a canvas node, `[:edit …]`, and `.table` documents
   refreshed as Markdown and Canvas are.
-- A kept value marked as stale, and the mark on iOS and macOS.
+- The mark on iOS and macOS.
 - Where a run's full record is kept: the document holds the short form
   (the marker), and the workspace's log is to design.
 
